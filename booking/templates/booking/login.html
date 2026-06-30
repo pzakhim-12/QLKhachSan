@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load socialaccount %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 75vh;">
+        <div class="col-12 col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 py-3" style="border-radius: 20px; background: #ffffff;">
+                <div class="card-header text-center bg-transparent border-0 pt-4 pb-2">
+                    <h2 class="fw-bold mb-1" style="color: #042759; letter-spacing: 1px;">🏨 ZAGOHAVEN</h2>
+                    <p class="text-muted small">Chào mừng bạn trở lại! Vui lòng đăng nhập.</p>
+                </div>
+                
+                <div class="card-body px-4 px-md-5">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show small py-2" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="POST" action="{% url 'login' %}" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div class="form-floating mb-3">
+                            <input type="text" name="username" class="form-control bg-light border-0" id="floatingUsername" placeholder="Username" style="border-radius: 12px;" required>
+                            <label for="floatingUsername" class="text-secondary small">Tên đăng nhập</label>
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            <input type="password" name="password" class="form-control bg-light border-0" id="floatingPassword" placeholder="Password" style="border-radius: 12px;" required>
+                            <label for="floatingPassword" class="text-secondary small">Mật khẩu</label>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4 px-1">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMe">
+                                <label class="form-check-label text-muted small" for="rememberMe">Ghi nhớ tôi</label>
+                            </div>
+                            <a href="#" class="text-decoration-none small fw-semibold" style="color: #042759;">Quên mật khẩu?</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-lg w-100 fw-bold text-white shadow-sm py-2" style="background-color: #042759; border-radius: 12px; transition: all 0.3s ease;">
+                            ĐĂNG NHẬP
+                        </button>
+                    </form>
+
+                    <div class="d-flex align-items-center my-4">
+                        <hr class="flex-grow-1 text-muted opacity-25">
+                        <span class="mx-3 text-muted small fw-medium">HOẶC</span>
+                        <hr class="flex-grow-1 text-muted opacity-25">
+                    </div>
+
+                    <a href="{% provider_login_url 'google' %}" class="btn btn-outline-dark w-100 fw-semibold d-flex align-items-center justify-content-center py-2" style="border-radius: 12px; border-color: #dee2e6; transition: all 0.3s ease;">
+                        <svg class="me-2" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                            <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3A11.914 11.914 0 0 0 12 0C7.03 0 2.757 2.864 0 7.045l5.266 2.72Z"/>
+                            <path fill="#4285F4" d="M23.514 12.273c0-.818-.073-1.609-.209-2.373H12v4.509h6.455a5.516 5.516 0 0 1-2.395 3.618l5.218 4.045c3.05-2.814 4.809-6.955 4.809-11.799Z"/>
+                            <path fill="#FBBC05" d="M5.266 14.235A7.013 7.013 0 0 1 4.909 12c0-.786.136-1.54.357-2.235L0 7.045A11.934 11.934 0 0 0 0 16.955l5.266-2.72Z"/>
+                            <path fill="#34A853" d="M12 24c3.24 0 5.955-1.077 7.94-2.918l-5.218-4.045c-1.445.973-3.295 1.554-5.355 1.554-4.118 0-7.605-2.786-8.85-6.536L0 14.786A11.914 11.914 0 0 0 12 24Z"/>
+                        </svg>
+                        Tiếp tục với Google
+                    </a>
+                </div>
+
+                <div class="card-footer text-center bg-transparent border-0 pb-3">
+                    <p class="text-muted small mb-0">Chưa có tài khoản? <a href="{% url 'register' %}" class="fw-bold text-decoration-none" style="color: #042759;">Đăng ký ngay</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25rem rgba(4, 39, 89, 0.15) !important;
+        border-color: #042759 !important;
+    }
+    .btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
