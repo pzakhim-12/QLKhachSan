@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .new-msg-card {
+        max-width: 640px;
+        margin: 0 auto;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+</style>
+
+<div class="new-msg-card card border-0">
+    <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+        <a href="{% url 'message_inbox' %}" class="text-muted text-decoration-none small">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại hộp thư
+        </a>
+        <h4 class="fw-bold mt-3" style="color: #05203c;">
+            <i class="bi bi-chat-square-text me-2 text-primary"></i> Gửi tin nhắn mới
+        </h4>
+        <p class="text-muted small">Nhân viên Zagohaven sẽ phản hồi trong thời gian sớm nhất.</p>
+    </div>
+    <div class="card-body px-4 pb-4">
+        {% if booking %}
+        <div class="alert alert-info border-0 bg-info-subtle rounded-3 mb-4">
+            <i class="bi bi-info-circle me-2"></i>
+            Tin nhắn liên quan đến đơn đặt phòng <strong>#{{ booking.id }}</strong> —
+            Phòng <strong>{{ booking.room.room_number }}</strong>
+            ({{ booking.check_in|date:"d/m/Y" }} → {{ booking.check_out|date:"d/m/Y" }})
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            {% if booking %}<input type="hidden" name="booking_id" value="{{ booking.id }}">{% endif %}
+
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-uppercase text-secondary">Tiêu đề</label>
+                <input type="text" name="subject" class="form-control rounded-3"
+                       value="{{ default_subject }}" placeholder="VD: Hỏi về thời gian check-in">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold small text-uppercase text-secondary">Nội dung tin nhắn</label>
+                <textarea name="content" class="form-control rounded-3" rows="6" required
+                          placeholder="Mô tả chi tiết vấn đề hoặc câu hỏi của bạn..."></textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary rounded-pill fw-bold px-4">
+                    <i class="bi bi-send me-1"></i> Gửi tin nhắn
+                </button>
+                <a href="{% url 'message_inbox' %}" class="btn btn-light rounded-pill fw-bold px-4">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

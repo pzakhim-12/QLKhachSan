@@ -1,36 +1,333 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container mt-4 mb-5">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap');
+
+    .lux-room-detail {
+        --ink: #05203c;
+        --ink-soft: #0e3a63;
+        --gold: #b8905a;
+        --gold-deep: #93703f;
+        --gold-soft: #ecdfc4;
+        --ivory: #faf7f1;
+        --line: #e6ddc8;
+        --stone: #6b6459;
+        --stone-light: #a39c8c;
+        font-family: 'Inter', sans-serif;
+        color: var(--ink);
+    }
+    .lux-room-detail .lux-serif { font-family: 'Playfair Display', serif; }
+
+    /* ---------- Breadcrumb ---------- */
+    .lux-breadcrumb {
+        font-size: 0.86rem;
+    }
+    .lux-breadcrumb .breadcrumb-item a {
+        color: var(--stone);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+    .lux-breadcrumb .breadcrumb-item a:hover { color: var(--gold-deep); }
+    .lux-breadcrumb .breadcrumb-item.active {
+        color: var(--ink);
+        font-weight: 700;
+    }
+    .lux-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+        color: var(--stone-light);
+    }
+
+    /* ---------- Header ---------- */
+    .lux-detail-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: var(--gold-soft);
+        color: var(--gold-deep);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.45rem 1rem;
+        border-radius: 50px;
+        margin-bottom: 0.9rem;
+    }
+    .lux-detail-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: clamp(1.9rem, 3vw, 2.6rem);
+        color: var(--ink);
+        margin-bottom: 0.4rem;
+        font-variant-numeric: lining-nums;
+        font-feature-settings: "lnum" 1, "pnum" 1;
+    }
+    .lux-detail-location {
+        color: var(--stone);
+        font-size: 1rem;
+    }
+    .lux-detail-location i { color: var(--gold-deep); }
+
+    .favorite-btn-lg {
+        width: 46px;
+        height: 46px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid var(--line);
+        background: white;
+        color: var(--ink);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .favorite-btn-lg:hover {
+        transform: scale(1.08);
+        box-shadow: 0 6px 18px rgba(184, 144, 90, 0.28);
+        border-color: var(--gold);
+    }
+
+    /* ---------- Carousel ---------- */
+    .lux-carousel {
+        border-radius: 18px;
+        box-shadow: 0 20px 46px rgba(5, 32, 60, 0.16);
+    }
+    .lux-carousel .carousel-control-prev,
+    .lux-carousel .carousel-control-next {
+        width: 6%;
+    }
+    .lux-carousel .carousel-control-prev-icon,
+    .lux-carousel .carousel-control-next-icon {
+        background-color: rgba(5, 32, 60, 0.55) !important;
+        border: 1px solid rgba(236, 223, 196, 0.5);
+        border-radius: 50%;
+        padding: 24px;
+        background-size: 45%;
+    }
+    .lux-carousel .carousel-indicators [data-bs-target] {
+        background-color: var(--gold-soft);
+        opacity: 0.6;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        border: none;
+    }
+    .lux-carousel .carousel-indicators .active {
+        background-color: var(--gold);
+        opacity: 1;
+    }
+
+    /* ---------- Section headings ---------- */
+    .lux-section-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: var(--ink);
+        margin-bottom: 0;
+    }
+    .lux-section-divider {
+        width: 56px;
+        height: 1px;
+        background: var(--gold);
+        position: relative;
+        margin: 0.75rem 0 1.5rem;
+    }
+    .lux-section-divider::after {
+        content: "";
+        position: absolute;
+        left: 24px;
+        top: -3px;
+        width: 6px;
+        height: 6px;
+        background: var(--gold);
+        transform: rotate(45deg);
+    }
+    .lux-overview-text {
+        color: var(--stone);
+        font-size: 1.02rem;
+        line-height: 1.85;
+        text-align: justify;
+    }
+
+    /* ---------- Amenities ---------- */
+    .lux-amenity {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 1rem 1.2rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .lux-amenity:hover {
+        border-color: var(--gold);
+        box-shadow: 0 12px 26px rgba(5, 32, 60, 0.08);
+        transform: translateY(-2px);
+    }
+    .lux-amenity-icon {
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--gold-soft);
+        color: var(--gold-deep);
+        font-size: 1.15rem;
+    }
+    .lux-amenity span:last-child {
+        font-size: 0.98rem;
+        font-weight: 500;
+        color: var(--ink);
+    }
+
+    /* ---------- Booking sidebar ---------- */
+    .lux-booking-card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 20px 46px rgba(5, 32, 60, 0.1);
+        position: relative;
+    }
+    .lux-booking-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 4px;
+        background: linear-gradient(90deg, var(--gold) 0%, var(--gold-soft) 50%, var(--gold) 100%);
+    }
+    .lux-booking-body { padding: 2rem 1.85rem; }
+    .lux-price-label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--stone);
+        margin-bottom: 0.3rem;
+    }
+    .lux-price-value {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: 2.1rem;
+        color: var(--gold-deep);
+        margin-bottom: 0;
+        font-variant-numeric: lining-nums;
+        font-feature-settings: "lnum" 1, "pnum" 1;
+    }
+    .lux-price-value sup {
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--stone);
+        margin-left: 0.15rem;
+    }
+    .lux-price-included {
+        color: var(--gold-deep);
+        font-size: 0.86rem;
+        font-weight: 600;
+        margin-top: 0.6rem;
+    }
+    .lux-price-included i { margin-right: 0.3rem; }
+
+    .lux-booking-divider {
+        border: none;
+        border-top: 1px dashed var(--line);
+        margin: 1.5rem 0;
+    }
+
+    .btn-lux-book {
+        display: block;
+        width: 100%;
+        text-align: center;
+        background: var(--ink);
+        color: var(--gold-soft);
+        border: 1px solid var(--ink);
+        border-radius: 50px;
+        padding: 0.95rem 1rem;
+        font-size: 0.92rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        text-decoration: none !important;
+        box-shadow: 0 14px 30px rgba(5, 32, 60, 0.22);
+        transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+    }
+    .btn-lux-book:hover {
+        background: var(--gold-deep);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+    .lux-book-note {
+        text-align: center;
+        color: var(--stone-light);
+        font-size: 0.8rem;
+        margin: 0.85rem 0 0;
+    }
+
+    .lux-stay-info {
+        background: var(--ivory);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 1.2rem 1.35rem;
+        margin-top: 1.6rem;
+    }
+    .lux-stay-info h6 {
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink);
+        margin-bottom: 0.9rem;
+    }
+    .lux-stay-info h6 i { color: var(--gold-deep); }
+    .lux-stay-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.88rem;
+        margin-bottom: 0.6rem;
+    }
+    .lux-stay-row:last-child { margin-bottom: 0; }
+    .lux-stay-row .label { color: var(--stone); }
+    .lux-stay-row .label i { color: var(--gold-deep); margin-right: 0.3rem; }
+    .lux-stay-row .value { font-weight: 700; color: var(--ink); }
+    .lux-stay-row .value.free { color: #2f7d55; }
+</style>
+
+<div class="container mt-4 mb-5 lux-room-detail">
     <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb fs-6">
-            <li class="breadcrumb-item"><a href="{% url 'room_list' %}" class="text-decoration-none text-secondary"><i class="bi bi-house-door-fill"></i> Trang chủ</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'room_list' %}" class="text-decoration-none text-secondary">Danh sách phòng</a></li>
-            <li class="breadcrumb-item active fw-bold text-primary" aria-current="page">Phòng {{ room.room_number }}</li>
+        <ol class="breadcrumb lux-breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'room_list' %}"><i class="bi bi-house-door-fill"></i> Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'room_list' %}">Danh sách phòng</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Phòng {{ room.room_number }}</li>
         </ol>
     </nav>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
         <div>
-            <span class="badge bg-warning text-dark fs-6 mb-2 px-3 py-2 rounded-pill"><i class="bi bi-star-fill text-danger"></i> {{ room.category.name }}</span>
-            <h1 class="fw-bold text-dark" style="font-size: 2.5rem;">Phòng {{ room.room_number }}</h1>
-            <p class="text-muted fs-5"><i class="bi bi-geo-alt-fill text-danger"></i> ZagoHaven Hotel - Trung tâm thành phố</p>
+            <span class="lux-detail-badge"><i class="bi bi-star-fill"></i> {{ room.category.name }}</span>
+            <h1 class="lux-detail-title">Phòng {{ room.room_number }}</h1>
+            <p class="lux-detail-location mb-0"><i class="bi bi-geo-alt-fill"></i> ZagoHaven Hotel - Trung tâm thành phố</p>
+        </div>
+        <div>
+            {% include 'booking/includes/favorite_button.html' with room=room is_favorite=is_favorite btn_class='favorite-btn-lg shadow-sm' %}
         </div>
     </div>
 
     <div class="row g-5">
         <div class="col-lg-8">
-            
-            <div id="roomImageCarousel" class="carousel slide shadow-lg rounded-4 overflow-hidden mb-5" data-bs-ride="carousel">
+
+            <div id="roomImageCarousel" class="carousel slide lux-carousel overflow-hidden mb-5" data-bs-ride="carousel">
                 <div class="carousel-inner">
                     {% if room.image %}
                     <div class="carousel-item active">
                         <img src="{{ room.image.url }}" class="d-block w-100" alt="Phòng {{ room.room_number }}" style="height: 550px; object-fit: cover;">
                     </div>
                     {% else %}
-                    <div class="carousel-item active bg-light text-secondary p-5 text-center" style="height: 550px; display: flex; align-items: center; justify-content: center;">
+                    <div class="carousel-item active text-secondary p-5 text-center" style="height: 550px; display: flex; align-items: center; justify-content: center; background: var(--ivory);">
                         <div>
-                            <i class="bi bi-image fs-1 mb-3"></i>
-                            <h3>Đang cập nhật hình ảnh</h3>
+                            <i class="bi bi-image fs-1 mb-3" style="color: var(--gold);"></i>
+                            <h3 class="lux-serif">Đang cập nhật hình ảnh</h3>
                         </div>
                     </div>
                     {% endif %}
@@ -41,82 +338,103 @@
                     </div>
                     {% endfor %}
                 </div>
-                
+
                 {% if room.images.all %}
                 <button class="carousel-control-prev" type="button" data-bs-target="#roomImageCarousel" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.6); border-radius: 50%; padding: 25px;"></span>
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                     <span class="visually-hidden">Trước</span>
                 </button>
                 <button class="carousel-control-next" type="button" data-bs-target="#roomImageCarousel" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.6); border-radius: 50%; padding: 25px;"></span>
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
                     <span class="visually-hidden">Sau</span>
                 </button>
                 {% endif %}
             </div>
 
             <div class="mb-5">
-                <h3 class="fw-bold border-bottom pb-2 mb-3">Tổng quan phòng</h3>
-                <p class="fs-5 text-secondary" style="line-height: 1.8; text-align: justify;">{{ room.description }}</p>
+                <h3 class="lux-section-title">Tổng quan phòng</h3>
+                <div class="lux-section-divider"></div>
+                <p class="lux-overview-text">{{ room.description }}</p>
             </div>
 
             <div>
-                <h3 class="fw-bold border-bottom pb-2 mb-4">Tiện nghi nổi bật</h3>
-                <div class="row g-4 fs-5 text-dark">
-                    <div class="col-md-6 d-flex align-items-center">
-                        <div class="bg-light p-3 rounded-circle me-3"><i class="bi bi-wifi fs-4 text-primary"></i></div>
-                        <span>Wi-Fi tốc độ cao miễn phí</span>
+                <h3 class="lux-section-title">Tiện nghi nổi bật</h3>
+                <div class="lux-section-divider"></div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="lux-amenity">
+                            <div class="lux-amenity-icon"><i class="bi bi-wifi"></i></div>
+                            <span>Wi-Fi tốc độ cao miễn phí</span>
+                        </div>
                     </div>
-                    <div class="col-md-6 d-flex align-items-center">
-                        <div class="bg-light p-3 rounded-circle me-3"><i class="bi bi-tv fs-4 text-primary"></i></div>
-                        <span>Smart TV 55 inch kèm Netflix</span>
+                    <div class="col-md-6">
+                        <div class="lux-amenity">
+                            <div class="lux-amenity-icon"><i class="bi bi-tv"></i></div>
+                            <span>Smart TV 55 inch kèm Netflix</span>
+                        </div>
                     </div>
-                    <div class="col-md-6 d-flex align-items-center">
-                        <div class="bg-light p-3 rounded-circle me-3"><i class="bi bi-snow fs-4 text-primary"></i></div>
-                        <span>Điều hòa trung tâm 2 chiều</span>
+                    <div class="col-md-6">
+                        <div class="lux-amenity">
+                            <div class="lux-amenity-icon"><i class="bi bi-snow"></i></div>
+                            <span>Điều hòa trung tâm 2 chiều</span>
+                        </div>
                     </div>
-                    <div class="col-md-6 d-flex align-items-center">
-                        <div class="bg-light p-3 rounded-circle me-3"><i class="bi bi-safe fs-4 text-primary"></i></div>
-                        <span>Két sắt điện tử an toàn</span>
+                    <div class="col-md-6">
+                        <div class="lux-amenity">
+                            <div class="lux-amenity-icon"><i class="bi bi-safe"></i></div>
+                            <span>Két sắt điện tử an toàn</span>
+                        </div>
                     </div>
-                    <div class="col-md-6 d-flex align-items-center">
-                        <div class="bg-light p-3 rounded-circle me-3"><i class="bi bi-door-open fs-4 text-primary"></i></div>
-                        <span>Ban công view thành phố</span>
+                    <div class="col-md-6">
+                        <div class="lux-amenity">
+                            <div class="lux-amenity-icon"><i class="bi bi-door-open"></i></div>
+                            <span>Ban công view thành phố</span>
+                        </div>
                     </div>
-                    <div class="col-md-6 d-flex align-items-center">
-                        <div class="bg-light p-3 rounded-circle me-3"><i class="bi bi-cup-hot fs-4 text-primary"></i></div>
-                        <span>Bữa sáng Buffet cao cấp</span>
+                    <div class="col-md-6">
+                        <div class="lux-amenity">
+                            <div class="lux-amenity-icon"><i class="bi bi-cup-hot"></i></div>
+                            <span>Bữa sáng Buffet cao cấp</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-4">
-            <div class="card shadow-lg border-0 rounded-4 sticky-top" style="top: 30px;">
-                <div class="card-body p-4 p-xl-5">
-                    <div class="text-secondary mb-1">Giá mỗi đêm từ</div>
-                    <h2 class="text-primary fw-bold mb-0">{{ room.category.price_per_night }} <sup class="text-decoration-underline fs-5">đ</sup></h2>
-                    <div class="text-success small mt-2 fw-semibold"><i class="bi bi-check-circle-fill"></i> Đã bao gồm thuế và phí</div>
-                    
-                    <hr class="my-4">
-                    
-                    <a href="{% url 'book_room' room.id %}" class="btn btn-primary btn-lg w-100 fw-bold py-3 shadow-sm rounded-3 fs-5 mb-3">
-                        ĐẶT PHÒNG NGAY
-                    </a>
-                    <p class="text-center text-muted small mb-4">Bạn chưa bị trừ tiền ở bước này</p>
+            <div class="lux-booking-card sticky-top" style="top: 30px;">
+                <div class="lux-booking-body">
+                    <div class="lux-price-label">Giá mỗi đêm từ</div>
+                    <h2 class="lux-price-value">{{ room.category.price_per_night|floatformat:"0g" }}<sup>đ</sup></h2>
+                    <div class="lux-price-included"><i class="bi bi-check-circle-fill"></i>Đã bao gồm thuế và phí</div>
+     
+                    {% with alert=room.category.get_current_season_alert %}
+                        {% if alert %}
+                            <center><div style="border-left: 3px solid var(--gold); padding-left: 10px; font-size: 0.85rem; font-style: italic; color: var(--stone); margin-top: 12px; line-height: 1.4;">
+                                {{ alert.message }}
+                            </div></center>
+                        {% endif %}
+                    {% endwith %}
+                    <hr class="lux-booking-divider" style="margin: 1.2rem 0 1rem 0;">
 
-                    <div class="bg-light p-3 rounded-3 mb-0">
-                        <h6 class="fw-bold mb-3"><i class="bi bi-info-circle-fill text-secondary me-1"></i> Thông tin lưu trú</h6>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-secondary"><i class="bi bi-box-arrow-in-right"></i> Nhận phòng:</span>
-                            <span class="fw-semibold">14:00</span>
+                    <a href="{% url 'book_room' room.id %}" class="btn-lux-book">
+                        Đặt phòng ngay
+                    </a>
+                    <p class="lux-book-note">Bạn chưa bị trừ tiền ở bước này</p>
+
+                    <div class="lux-stay-info">
+                        <h6><i class="bi bi-info-circle-fill"></i> Thông tin lưu trú</h6>
+                        <div class="lux-stay-row">
+                            <span class="label"><i class="bi bi-box-arrow-in-right"></i>Nhận phòng</span>
+                            <span class="value">14:00</span>
                         </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-secondary"><i class="bi bi-box-arrow-right"></i> Trả phòng:</span>
-                            <span class="fw-semibold">12:00</span>
+                        <div class="lux-stay-row">
+                            <span class="label"><i class="bi bi-box-arrow-right"></i>Trả phòng</span>
+                            <span class="value">12:00</span>
                         </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-secondary"><i class="bi bi-x-circle"></i> Hủy phòng:</span>
-                            <span class="fw-semibold text-success">Miễn phí</span>
+                        <div class="lux-stay-row">
+                            <span class="label"><i class="bi bi-x-circle"></i>Hủy phòng</span>
+                            <span class="value free">Miễn phí</span>
                         </div>
                     </div>
                 </div>

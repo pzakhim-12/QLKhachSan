@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap');
+
+    .lux-favorite-page {
+        --ink: #05203c;
+        --ink-soft: #0e3a63;
+        --gold: #b8905a;
+        --gold-deep: #93703f;
+        --gold-soft: #ecdfc4;
+        --ivory: #faf7f1;
+        --line: #e6ddc8;
+        --stone: #6b6459;
+        --stone-light: #a39c8c;
+        font-family: 'Inter', sans-serif;
+        color: var(--ink);
+    }
+    
+    .lux-favorite-page .lux-serif { font-family: 'Playfair Display', serif; }
+    .lux-favorite-page .lux-serif, .lux-price {
+        font-variant-numeric: lining-nums;
+        font-feature-settings: "lnum" 1, "pnum" 1;
+    }
+
+    /* ---------- Header ---------- */
+    .lux-eyebrow { display: inline-block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-deep); margin-bottom: 0.6rem; }
+    .lux-title { font-family: 'Playfair Display', serif; font-weight: 600; font-size: clamp(1.6rem, 2.4vw, 2.15rem); color: var(--ink); margin-bottom: 0; }
+    .lux-divider { width: 64px; height: 1px; background: var(--gold); position: relative; margin: 0.9rem 0 0.75rem; }
+    .lux-divider::after { content: ""; position: absolute; left: 28px; top: -3px; width: 7px; height: 7px; background: var(--gold); transform: rotate(45deg); }
+    .lux-count { font-size: 0.76rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--stone); font-weight: 600; border: 1px solid var(--line); padding: 0.55rem 1.1rem; border-radius: 2px; background: #fff; white-space: nowrap; }
+
+    /* ---------- Vertical Card ---------- */
+    .lux-v-card {
+        background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; transition: transform 0.35s ease, box-shadow 0.35s ease; display: flex; flex-direction: column; height: 100%;
+    }
+    .lux-v-card:hover { transform: translateY(-5px); box-shadow: 0 22px 44px rgba(5, 32, 60, 0.12); }
+    
+    .lux-v-media { position: relative; height: 240px; overflow: hidden; background: var(--ink); }
+    .lux-v-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+    .lux-v-card:hover .lux-v-media img { transform: scale(1.06); }
+    .lux-v-media.is-sold img { filter: grayscale(55%) brightness(0.85); }
+    .lux-fav-btn-wrap { position: absolute; top: 12px; right: 12px; z-index: 10; }
+    
+    .lux-v-body { padding: 1.5rem; display: flex; flex-direction: column; flex: 1; }
+    
+    /* ---------- Badges ---------- */
+    .lux-badge { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.35rem 0.8rem; border-radius: 50px; }
+    .lux-badge-category { background: var(--ivory); color: var(--gold-deep); border: 1px solid var(--gold); }
+    .lux-badge-available { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+    .lux-badge-sold { background: #f8f9fa; color: var(--stone-light); border: 1px dashed var(--stone-light); }
+
+    /* ---------- Text Details ---------- */
+    .lux-v-title { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 600; color: var(--ink); margin-top: 0.8rem; margin-bottom: 0.5rem; }
+    .lux-v-meta { font-size: 0.82rem; color: var(--stone); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem; }
+    .lux-v-meta i { color: var(--gold-deep); font-size: 0.9rem; }
+    .lux-saved-time { font-size: 0.75rem; color: var(--stone-light); margin-bottom: 1rem; font-style: italic; }
+    
+    /* ---------- Price & Actions ---------- */
+    .lux-price-wrap { margin-top: auto; padding-top: 1.2rem; border-top: 1px dashed var(--line); margin-bottom: 1.2rem; display: flex; align-items: baseline; gap: 0.3rem;}
+    .lux-price { font-family: 'Playfair Display', serif; font-size: 1.45rem; font-weight: 700; color: var(--gold-deep); line-height: 1; }
+    .lux-price-unit { font-family: 'Inter', sans-serif; font-size: 0.75rem; color: var(--stone); font-weight: 500; }
+    
+    .btn-lux-outline {
+        display: flex; align-items: center; justify-content: center; gap: 0.4rem; background: var(--ink); color: var(--gold-soft); border: 1px solid var(--ink); border-radius: 50px; padding: 0.7rem 1.4rem; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none !important; transition: all 0.25s ease; width: 100%;
+    }
+    .btn-lux-outline:hover { background: var(--gold-deep); border-color: var(--gold-deep); color: #fff; transform: translateY(-2px); }
+
+    /* ---------- Empty State ---------- */
+    .lux-empty { padding: 5rem 1rem; text-align: center; background: var(--ivory); border: 1px dashed var(--line); border-radius: 12px; }
+    .lux-empty i { color: var(--gold); opacity: 0.6; font-size: 3.5rem; margin-bottom: 1.2rem; display: block;}
+    .lux-empty h5 { font-family: 'Playfair Display', serif; color: var(--ink); font-weight: 600; font-size: 1.6rem; margin-bottom: 0.5rem; }
+    .lux-empty p { color: var(--stone); margin-bottom: 1.5rem; }
+    .btn-lux-ghost { display: inline-block; background: transparent; color: var(--ink); border: 1px solid var(--ink); border-radius: 50px; padding: 0.65rem 1.8rem; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none !important; transition: all 0.25s ease; }
+    .btn-lux-ghost:hover { background: var(--ink); color: var(--gold-soft); }
+</style>
+
+<div class="container my-5 lux-favorite-page">
+    <div class="d-flex justify-content-between align-items-end mb-5 flex-wrap gap-3">
+        <div>
+            <span class="lux-eyebrow">Bộ sưu tập cá nhân</span>
+            <h2 class="lux-title">Danh sách phòng yêu thích</h2>
+            <div class="lux-divider"></div>
+            <p class="lux-subtitle mb-0" style="color: var(--stone);">Các phòng bạn đã lưu để trải nghiệm sau.</p>
+        </div>
+        <span class="lux-count">{{ favorites.count }} phòng đã lưu</span>
+    </div>
+
+    {% if favorites %}
+    <div class="row g-4">
+        {% for fav in favorites %}
+        {% with room=fav.room %}
+        <div class="col-md-6 col-xl-4">
+            <div class="lux-v-card">
+                <div class="lux-v-media {% if not room.is_available %}is-sold{% endif %}">
+                    {% if room.image %}
+                        <img src="{{ room.image.url }}" alt="Phòng {{ room.room_number }}">
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center h-100 w-100" style="background: var(--ivory);">
+                            <i class="bi bi-image" style="font-size: 3rem; color: var(--line);"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="lux-fav-btn-wrap">
+                        {% include 'booking/includes/favorite_button.html' with room=room is_favorite=True %}
+                    </div>
+                </div>
+
+                <div class="lux-v-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="lux-badge lux-badge-category">{{ room.category.name }}</span>
+                        {% if room.is_available %}
+                            <span class="lux-badge lux-badge-available">Còn phòng</span>
+                        {% else %}
+                            <span class="lux-badge lux-badge-sold">Hết phòng</span>
+                        {% endif %}
+                    </div>
+                    
+                    <h4 class="lux-v-title">Phòng {{ room.room_number }}</h4>
+
+                    <div class="lux-v-meta">
+                        <i class="bi bi-people"></i> Tối đa {{ room.category.capacity }} người
+                    </div>
+                    
+                    <div class="lux-saved-time">
+                        <i class="bi bi-clock-history me-1"></i> Đã lưu vào {{ fav.created_at|date:"d/m/Y H:i" }}
+                    </div>
+
+                    <div class="lux-price-wrap">
+                        <span class="lux-price">{{ room.category.price_per_night|floatformat:"0g" }}đ</span>
+                        <span class="lux-price-unit">/ đêm</span>
+                    </div>
+
+                    <a href="{% url 'room_detail' room.id %}" class="btn-lux-outline">
+                        <i class="bi bi-eye"></i> Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="lux-empty">
+                <i class="bi bi-heart"></i>
+                <h5>Chưa có phòng yêu thích</h5>
+                <p>Nhấn biểu tượng trái tim trên phòng bạn thích để lưu vào bộ sưu tập cá nhân.</p>
+                <a href="{% url 'room_list' %}" class="btn-lux-ghost">Khám phá phòng ngay</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

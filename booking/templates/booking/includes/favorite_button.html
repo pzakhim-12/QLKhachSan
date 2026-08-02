@@ -1,0 +1,19 @@
+{% if user.is_authenticated %}
+<form method="POST" action="{% url 'toggle_favorite' room.id %}" class="d-inline favorite-form">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button type="submit"
+            class="btn btn-sm favorite-btn {{ btn_class|default:'' }}"
+            title="{% if is_favorite %}Bỏ yêu thích{% else %}Thêm vào yêu thích{% endif %}"
+            aria-label="{% if is_favorite %}Bỏ yêu thích{% else %}Thêm vào yêu thích{% endif %}">
+        <i class="bi {% if is_favorite %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+    </button>
+</form>
+{% else %}
+<a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}"
+   class="btn btn-sm favorite-btn {{ btn_class|default:'' }}"
+   title="Đăng nhập để lưu yêu thích"
+   aria-label="Đăng nhập để lưu yêu thích">
+    <i class="bi bi-heart"></i>
+</a>
+{% endif %}

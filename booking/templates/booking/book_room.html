@@ -1,141 +1,471 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Đặt phòng {{ room.room_number }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-</head>
-<body class="bg-light pb-5">
-    <nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'room_list' %}">ZagoHaven</a>
-        </div>
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap');
+
+    .lux-book-room {
+        --ink: #05203c;
+        --ink-soft: #0e3a63;
+        --gold: #b8905a;
+        --gold-deep: #93703f;
+        --gold-soft: #ecdfc4;
+        --ivory: #faf7f1;
+        --line: #e6ddc8;
+        --stone: #6b6459;
+        --stone-light: #a39c8c;
+        font-family: 'Inter', sans-serif;
+        color: var(--ink);
+    }
+    .lux-book-room .lux-serif { font-family: 'Playfair Display', serif; }
+
+    /* Badge & Card Styles */
+    .lux-detail-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: var(--gold-soft);
+        color: var(--gold-deep);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.45rem 1rem;
+        border-radius: 50px;
+        margin-bottom: 0.9rem;
+    }
+
+    .lux-booking-card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 20px 46px rgba(5, 32, 60, 0.1);
+        position: relative;
+    }
+    .lux-booking-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 4px;
+        background: linear-gradient(90deg, var(--gold) 0%, var(--gold-soft) 50%, var(--gold) 100%);
+    }
+    .lux-booking-body { padding: 2.2rem 2.5rem; }
+
+    .lux-section-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: var(--ink);
+        margin-bottom: 0;
+    }
+    .lux-section-divider {
+        width: 56px;
+        height: 1px;
+        background: var(--gold);
+        position: relative;
+        margin: 0.75rem 0 1.5rem;
+    }
+    .lux-section-divider::after {
+        content: "";
+        position: absolute;
+        left: 24px;
+        top: -3px;
+        width: 6px;
+        height: 6px;
+        background: var(--gold);
+        transform: rotate(45deg);
+    }
+
+    /* Form Inputs */
+    .lux-form-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 0.5rem;
+    }
+    .lux-form-label i { color: var(--gold-deep); font-size: 0.9rem; }
+
+    .lux-input-group {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .lux-input-group:focus-within {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 0.15rem rgba(184, 144, 90, 0.18);
+    }
+    .lux-input-group .lux-input-icon {
+        width: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gold-deep);
+        font-size: 1.1rem;
+        background: var(--ivory);
+        align-self: stretch;
+        border-right: 1px solid var(--line);
+    }
+    .lux-input-group .form-control,
+    .lux-input-group .form-select,
+    .lux-input-group input,
+    .lux-input-group select {
+        border: none;
+        font-size: 0.95rem;
+        background: transparent;
+        padding: 0.75rem 1rem;
+        box-shadow: none !important;
+        width: 100%;
+        outline: none;
+        color: var(--ink);
+    }
+
+    /* Buttons (Đã thu nhỏ lại cho vừa vặn) */
+    .btn-lux-book {
+        display: inline-block;
+        background: var(--ink);
+        color: var(--gold-soft);
+        border: 1px solid var(--ink);
+        border-radius: 50px;
+        padding: 0.65rem 1.4rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-decoration: none !important;
+        box-shadow: 0 10px 20px rgba(5, 32, 60, 0.15);
+        transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+        white-space: nowrap;
+    }
+    .btn-lux-book:hover {
+        background: var(--gold-deep);
+        border-color: var(--gold-deep);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    .btn-lux-ghost {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 50px;
+        padding: 0.65rem 1.4rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-decoration: none !important;
+        transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.2s ease;
+        white-space: nowrap;
+    }
+    .btn-lux-ghost:hover {
+        background: var(--ivory);
+        border-color: var(--gold);
+        color: var(--gold-deep);
+        transform: translateY(-2px);
+    }
+
+    /* Layout Specifics */
+    .lux-stay-info {
+        background: var(--ivory);
+        border: 1px dashed var(--gold-deep);
+        border-radius: 14px;
+        padding: 1.2rem 1.35rem;
+    }
+    .lux-room-preview {
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        box-shadow: 0 10px 30px rgba(5,32,60,0.05);
+        background: #fff;
+    }
+    .lux-price-value {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        color: var(--gold-deep);
+        font-variant-numeric: lining-nums;
+    }
+</style>
+
+<!-- Đã sửa mt-5 thành mt-4 để đồng bộ khoảng cách với trang room_detail -->
+<div class="container mt-4 mb-5 lux-book-room">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb" style="font-size: 0.86rem;">
+            <li class="breadcrumb-item"><a href="{% url 'room_list' %}" style="color: var(--stone); text-decoration: none;"><i class="bi bi-house-door-fill"></i> Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'room_list' %}" style="color: var(--stone); text-decoration: none;">Danh sách phòng</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'room_detail' room.id %}" style="color: var(--stone); text-decoration: none;">Phòng {{ room.room_number }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page" style="color: var(--ink); font-weight: 700;">Đặt phòng</li>
+        </ol>
     </nav>
 
-    <div class="container">
-        
+    <div class="row g-5">
+        <!-- Left: Room Summary Preview (Thêm sticky-top) -->
+        <div class="col-lg-5">
+            <div class="lux-room-preview sticky-top" style="top: 85px;">
+                {% if room.image %}
+                <img src="{{ room.image.url }}" class="w-100" alt="Phòng {{ room.room_number }}" style="height: 320px; object-fit: cover;">
+                {% else %}
+                <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 320px;">
+                    <i class="bi bi-image fs-1"></i>
+                </div>
+                {% endif %}
 
-        <div class="row g-4">
-            <div class="col-md-5">
-                <div class="card shadow-sm h-100 border-0">
-                    {% if room.image %}
-                        <img src="{{ room.image.url }}" class="card-img-top" alt="Phòng {{ room.room_number }}" style="height: 300px; object-fit: cover;">
-                    {% else %}
-                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 300px;">
-                            <i class="bi bi-image fs-1"></i>
-                            <span class="ms-2">Chưa có ảnh</span>
-                        </div>
-                    {% endif %}
-                    
-                    <div class="card-body">
-                        <span class="badge bg-info text-dark mb-2">{{ room.category.name }}</span>
-                        <h3 class="card-title fw-bold">Phòng {{ room.room_number }}</h3>
-                        
-                        <div class="d-flex align-items-center my-3 text-muted">
-                            <i class="bi bi-tag-fill me-2 fs-5"></i> 
-                            <span class="fs-4 fw-bold text-primary" id="price-per-night" data-price="{{ room.category.price_per_night }}">{{ room.category.price_per_night }} VNĐ</span> / đêm
-                        </div>
+                <div class="p-4">
+                    <span class="lux-detail-badge"><i class="bi bi-star-fill"></i> {{ room.category.name }}</span>
+                    <h3 class="lux-serif fw-bold mb-3" style="font-size: 2rem;">Phòng {{ room.room_number }}</h3>
 
-                        <p class="text-secondary mt-3">
-                            <i class="bi bi-info-circle"></i> {{ room.description|default:"Phòng đầy đủ tiện nghi, mang lại sự thoải mái nhất cho kỳ nghỉ của bạn." }}
-                        </p>
-
-                        <hr>
-                        <ul class="list-unstyled text-secondary small">
-                            <li class="mb-2"><i class="bi bi-check2-circle text-success me-2 fs-5"></i> Wifi tốc độ cao miễn phí</li>
-                            <li class="mb-2"><i class="bi bi-check2-circle text-success me-2 fs-5"></i> View ban công đẹp</li>
-                            <li><i class="bi bi-check2-circle text-success me-2 fs-5"></i> Phục vụ phòng 24/7</li>
-                        </ul>
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="lux-price-value fs-3">{{ room.category.price_per_night|floatformat:"0g" }} VNĐ</span>
+                        <span class="text-secondary ms-2">/ đêm</span>
                     </div>
+
+                    <p class="text-secondary mb-4" style="font-size: 0.95rem; line-height: 1.6;">
+                        {{ room.description|default:"Phòng sang trọng với đầy đủ tiện nghi, mang lại sự thoải mái nhất cho kỳ nghỉ của bạn." }}
+                    </p>
+
+                    <hr style="border-color: var(--line);">
+
+                    <ul class="list-unstyled mb-0" style="color: var(--stone); font-size: 0.9rem;">
+                        <li class="mb-3 d-flex align-items-center"><i class="bi bi-wifi fs-5 me-3" style="color: var(--gold-deep);"></i> Wifi tốc độ cao miễn phí</li>
+                        <li class="mb-3 d-flex align-items-center"><i class="bi bi-door-open fs-5 me-3" style="color: var(--gold-deep);"></i> View ban công đẹp</li>
+                        <li class="d-flex align-items-center"><i class="bi bi-cup-hot fs-5 me-3" style="color: var(--gold-deep);"></i> Phục vụ phòng 24/7</li>
+                    </ul>
                 </div>
             </div>
+        </div>
 
-            <div class="col-md-7">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                        <h4 class="mb-0 fw-bold text-uppercase text-primary"><i class="bi bi-calendar-check me-2"></i>Chọn lịch trình</h4>
-                    </div>
-                    <div class="card-body p-4">
-                        <form method="POST">
-                            {% csrf_token %} 
+        <!-- Right: Booking Form -->
+        <div class="col-lg-7">
+            <div class="lux-booking-card">
+                <div class="lux-booking-body">
+                    <h4 class="lux-section-title"><i class="bi bi-calendar-check me-2" style="color: var(--gold-deep);"></i>Chọn lịch trình</h4>
+                    <div class="lux-section-divider"></div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="lux-form-label"><i class="bi bi-calendar-event"></i>Ngày nhận phòng</label>
+                                <div class="lux-input-group">
+                                    <span class="lux-input-icon"><i class="bi bi-box-arrow-in-right"></i></span>
+                                    {{ form.check_in }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="lux-form-label"><i class="bi bi-calendar-event-fill"></i>Ngày trả phòng</label>
+                                <div class="lux-input-group">
+                                    <span class="lux-input-icon"><i class="bi bi-box-arrow-right"></i></span>
+                                    {{ form.check_out }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lux-stay-info mb-4">
+                            <h6 class="fw-bold mb-2" style="color: var(--ink); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;"><i class="bi bi-info-circle-fill me-2" style="color: var(--gold-deep);"></i>Quy định thời gian</h6>
+                            <p class="mb-0" style="color: var(--stone); font-size: 0.9rem;">
+                                Nhận phòng sau <strong style="color: var(--ink);">14:00</strong> và Trả phòng trước <strong style="color: var(--ink);">12:00</strong>. Vui lòng sắp xếp lịch trình phù hợp!
+                            </p>
+                        </div>
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="lux-form-label"><i class="bi bi-star"></i>Gói dịch vụ</label>
+                                <div class="lux-input-group">
+                                    <span class="lux-input-icon"><i class="bi bi-shield-check"></i></span>
+                                    <select name="rate_plan_id" class="form-select">
+                                        <option value="">-- Mặc định (Giá gốc) --</option>
+                                        {% for plan in rate_plans %}
+                                        <option value="{{ plan.id }}">
+                                            {{ plan.name }}
+                                            {% if plan.discount_percentage > 0 %}(Giảm {{ plan.discount_percentage|floatformat:"0g" }}%){% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <small style="color: var(--stone-light); font-size: 0.75rem; display: block; margin-top: 0.4rem;">
+                                    Tùy chọn chính sách bữa sáng & hoàn hủy.
+                                </small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="lux-form-label"><i class="bi bi-ticket-perforated"></i>Mã khuyến mãi (Nếu có)</label>
+                                <div class="lux-input-group">
+                                    <span class="lux-input-icon"><i class="bi bi-tags"></i></span>
+                                    <input type="text" name="coupon_code" class="form-control text-uppercase" placeholder="Nhập mã giảm giá...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 mt-4" style="background: var(--ivory); border-radius: 12px; border: 1px solid var(--gold-soft);">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span style="font-size: 0.95rem; font-weight: 500; color: var(--stone);">Tổng tiền kỳ nghỉ:</span>
+                                <div class="text-end">
+                                    <span id="total-price-display" style="font-size: 1.05rem; font-weight: 600; color: var(--stone);">0 VNĐ</span>
+                                </div>
+                            </div>
                             
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold text-secondary">Ngày nhận phòng</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-white"><i class="bi bi-calendar-event"></i></span>
-                                        {{ form.check_in }}
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mt-3 mt-md-0">
-                                    <label class="form-label fw-bold text-secondary">Ngày trả phòng</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-white"><i class="bi bi-calendar-event-fill"></i></span>
-                                        {{ form.check_out }}
-                                    </div>
+                            <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-2" style="border-color: rgba(184, 144, 90, 0.2) !important;">
+                                <span class="lux-serif" style="font-size: 1.2rem; font-weight: 700; color: var(--ink);">Thanh toán cọc (50%):</span>
+                                <div class="text-end">
+                                    <strong id="deposit-price" class="lux-price-value" style="font-size: 1.8rem; color: var(--gold-deep);">0 VNĐ</strong>
                                 </div>
                             </div>
+                            
+                            <div id="price-messages" class="mt-2 text-end"></div>
+                        </div>
 
-                            <div class="alert alert-primary mt-4 d-flex justify-content-between align-items-center" style="border-radius: 10px;">
-                                <span class="mb-0 fs-5">Tổng tiền dự kiến: </span>
-                                <strong id="total-price" class="text-danger fs-3">0 VNĐ</strong>
-                            </div>
-
-                            <div class="d-flex gap-2 mt-4 pt-2">
-                                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">Xác nhận Đặt phòng</button>
-                                <a href="{% url 'room_list' %}" class="btn btn-light btn-lg w-50 border fw-bold text-secondary">Quay lại</a>
-                            </div>
-                        </form>
-                    </div>
+                        <!-- Căn phải các nút bấm, thu nhỏ kích thước và xóa class px-5 -->
+                        <div class="d-flex gap-2 mt-4 pt-2 justify-content-end">
+                            <a href="{% url 'room_detail' room.id %}" class="btn-lux-ghost">
+                                Quay lại
+                            </a>
+                            <button type="submit" class="btn-lux-book">
+                                Xác nhận Đặt phòng
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script>
-        const disabledDates = {{ disabled_dates|safe }};
-        const pricePerNight = parseFloat(document.getElementById('price-per-night').getAttribute('data-price'));
-        
-        const checkInInput = document.querySelector("input[name='check_in']");
-        const checkOutInput = document.querySelector("input[name='check_out']");
+<!-- Scripts Flatpickr và Logic Tính Tiền -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    // Cấu hình dữ liệu từ Backend
+    const disabledDates = {{ disabled_dates|safe }};
+    const roomId = {{ room.id }};
+    const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
 
-        flatpickr(checkInInput, {
-            dateFormat: "Y-m-d",
-            minDate: "today", 
-            disable: disabledDates,
-            onChange: calculatePrice
-        });
+    // Bắt các element
+    const checkInInput = document.querySelector("input[name='check_in']");
+    const checkOutInput = document.querySelector("input[name='check_out']");
+    const ratePlanSelect = document.querySelector("select[name='rate_plan_id']");
+    const couponInput = document.querySelector("input[name='coupon_code']");
 
-        flatpickr(checkOutInput, {
-            dateFormat: "Y-m-d",
-            minDate: "today",
-            disable: disabledDates,
-            onChange: calculatePrice
-        });
+    // Thêm class cho input render từ form Django để tự động ăn CSS
+    if(checkInInput) checkInInput.classList.add('form-control');
+    if(checkOutInput) checkOutInput.classList.add('form-control');
 
-        function calculatePrice() {
-            const valIn = checkInInput.value;
-            const valOut = checkOutInput.value;
+    // Khởi tạo bộ lịch Flatpickr
+    flatpickr(checkInInput, {
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        disable: disabledDates,
+        onChange: calculatePrice
+    });
 
-            if (valIn && valOut) {
-                const dateIn = new Date(valIn);
-                const dateOut = new Date(valOut);
-                
-                const timeDiff = dateOut.getTime() - dateIn.getTime();
-                const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    flatpickr(checkOutInput, {
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        disable: disabledDates,
+        onChange: calculatePrice
+    });
 
-                if (daysDiff > 0) {
-                    const total = daysDiff * pricePerNight;
-                    document.getElementById('total-price').innerText = total.toLocaleString('vi-VN') + " VNĐ";
-                } else {
-                    document.getElementById('total-price').innerText = "Vui lòng chọn lại!";
-                    document.getElementById('total-price').classList.replace('text-danger', 'text-warning');
-                }
+    // Lắng nghe sự kiện đổi Gói giá và Khuyến mãi
+    if (ratePlanSelect) ratePlanSelect.addEventListener('change', calculatePrice);
+    if (couponInput) couponInput.addEventListener('blur', calculatePrice);
+
+    // Hàm tính giá gửi API về Backend
+    function calculatePrice() {
+        const valIn = checkInInput.value;
+        const valOut = checkOutInput.value;
+        const ratePlan = ratePlanSelect ? ratePlanSelect.value : '';
+        const coupon = couponInput ? couponInput.value : '';
+
+        if (valIn && valOut) {
+            const dateIn = new Date(valIn);
+            const dateOut = new Date(valOut);
+
+            if (dateOut <= dateIn) {
+                document.getElementById('total-price-display').innerText = "Vui lòng chọn lại!";
+                document.getElementById('deposit-price').innerText = "0 VNĐ";
+                document.getElementById('price-messages').innerHTML = '';
+                return;
             }
+
+            // Hiện Loading spinner
+            document.getElementById('total-price-display').innerText = 'Đang tính...';
+            document.getElementById('deposit-price').innerHTML = '<span class="spinner-border spinner-border-sm" style="color: var(--gold-deep);"></span>';
+            document.getElementById('price-messages').innerHTML = '';
+
+            fetch('/api/calculate-price/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    room_id: roomId,
+                    check_in: valIn,
+                    check_out: valOut,
+                    rate_plan_id: ratePlan,
+                    coupon_code: coupon
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Tính cọc 50%
+                        const deposit = data.total_price / 2;
+                        
+                        document.getElementById('total-price-display').innerText = `${data.total_price.toLocaleString('vi-VN')} VNĐ`;
+                        document.getElementById('deposit-price').innerText = `${deposit.toLocaleString('vi-VN')} VNĐ`;
+
+                        let msgOutput = '';
+                        if (data.discount > 0) {
+                            msgOutput += `<div style="color: #2f7d55; font-size: 0.85rem; margin-top: 6px; font-weight: 600;"><i class="bi bi-tags-fill"></i> Đã giảm: ${data.discount.toLocaleString('vi-VN')} VNĐ</div>`;
+                        }
+                        if (data.coupon_msg) {
+                            const msgColor = data.is_coupon_valid ? '#2f7d55' : '#dc3545';
+                            msgOutput += `<div style="color: ${msgColor}; font-weight: 600; font-size: 0.85rem; margin-top: 4px;">${data.coupon_msg}</div>`;
+                        }
+                        if (data.season_msg) {
+                            const isIncrease = data.season_msg.includes("phụ thu");
+                            const sColor = isIncrease ? '#e02424' : '#2f7d55'; 
+                            const sIcon = isIncrease ? 'bi-graph-up-arrow' : 'bi-stars';
+                            msgOutput += `<div style="color: ${sColor}; font-weight: 600; font-size: 0.85rem; margin-top: 4px;"><i class="bi ${sIcon}"></i> Lịch chọn: ${data.season_msg}</div>`;
+                        }
+                        // --- BẮT ĐẦU BỔ SUNG THÔNG BÁO GÓI DỊCH VỤ ---
+                        if (data.rate_plan_msg) {
+                            const isNonRef = data.rate_plan_msg.includes("Không Hoàn Hủy");
+                            const rpColor = isNonRef ? '#c84141' : '#0e3a63'; 
+                            const rpIcon = isNonRef ? 'bi-shield-x' : 'bi-shield-check';
+                            const rpBg = isNonRef ? '#fdf2f2' : '#f0f6ff';
+                            const rpBorder = isNonRef ? '#f3d8d8' : '#cce0ff';
+                            
+                            msgOutput += `<div style="background: ${rpBg}; border: 1px dashed ${rpBorder}; color: ${rpColor}; font-weight: 600; font-size: 0.8rem; padding: 6px 10px; border-radius: 6px; margin-top: 10px; text-align: left;"><i class="bi ${rpIcon} me-1"></i> ${data.rate_plan_msg}</div>`;
+                        }
+                        document.getElementById('price-messages').innerHTML = msgOutput;
+                    } else {
+                        document.getElementById('total-price-display').innerText = 'Lỗi tính toán';
+                        document.getElementById('deposit-price').innerHTML = `<span class="text-danger fs-6">${data.error}</span>`;
+                        document.getElementById('price-messages').innerHTML = '';
+                    }
+                })
+                .catch(err => {
+                    console.error("Lỗi:", err);
+                    document.getElementById('total-price-display').innerText = 'Lỗi';
+                    document.getElementById('deposit-price').innerHTML = '<span class="text-danger fs-6">Lỗi kết nối</span>';
+                    document.getElementById('price-messages').innerHTML = '';
+                });
         }
-    </script>
-</body>
-</html>
+    }
+</script>
+{% endblock %}

@@ -1,19 +1,72 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
-        <div class="col-12 col-md-6 col-lg-5">
-            <div class="card shadow-lg border-0 py-3" style="border-radius: 20px; background: #ffffff;">
-                <div class="card-header text-center bg-transparent border-0 pt-4 pb-2">
-                    <h2 class="fw-bold mb-1" style="color: #042759; letter-spacing: 1px;">🏨 ZAGOHAVEN</h2>
-                    <p class="text-muted small">Tạo tài khoản để nhận nhiều ưu đãi đặt phòng.</p>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap');
+
+    .lux-auth-page {
+        --ink: #05203c;
+        --ink-soft: #0e3a63;
+        --gold: #b8905a;
+        --gold-deep: #93703f;
+        --gold-soft: #ecdfc4;
+        --ivory: #faf7f1;
+        --line: #e6ddc8;
+        --stone: #6b6459;
+        font-family: 'Inter', sans-serif;
+        color: var(--ink);
+    }
+    
+    .lux-auth-page .lux-serif { font-family: 'Playfair Display', serif; }
+
+    .lux-auth-card {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: 0 16px 40px rgba(5, 32, 60, 0.08);
+        overflow: hidden;
+    }
+
+    .lux-form-control {
+        background-color: var(--ivory) !important;
+        border: 1px solid var(--line) !important;
+        color: var(--ink) !important;
+        border-radius: 12px !important;
+        box-shadow: none !important;
+        transition: all 0.3s ease;
+    }
+    .lux-form-control:focus {
+        background-color: #fff !important;
+        border-color: var(--gold) !important;
+        box-shadow: 0 0 0 4px rgba(184, 144, 90, 0.15) !important;
+    }
+    .lux-form-control::placeholder { color: transparent; }
+    
+    .btn-lux-primary {
+        background: var(--ink); color: var(--gold-soft); border: 1px solid var(--ink); border-radius: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.1em; font-weight: 700; padding: 0.85rem; transition: all 0.3s ease;
+    }
+    .btn-lux-primary:hover {
+        background: var(--gold-deep); border-color: var(--gold-deep); color: #ffffff; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(147, 112, 63, 0.2);
+    }
+
+    .lux-link { color: var(--gold-deep); text-decoration: none; font-weight: 600; transition: color 0.2s ease; }
+    .lux-link:hover { color: var(--ink); }
+</style>
+
+<div class="container lux-auth-page">
+    <div class="row justify-content-center align-items-center" style="min-height: 85vh;">
+        <div class="col-12 col-md-6 col-lg-5 my-5">
+            <div class="lux-auth-card py-4">
+                <div class="card-header text-center bg-transparent border-0 pt-3 pb-2">
+                    <h2 class="lux-serif fw-bold mb-2" style="color: var(--ink); letter-spacing: 2px;">Zagohaven</h2>
+                    <div style="width: 40px; height: 2px; background: var(--gold); margin: 0 auto 15px;"></div>
+                    <p class="small" style="color: var(--stone);">Tạo tài khoản để nhận ưu đãi đặc quyền.</p>
                 </div>
                 
                 <div class="card-body px-4 px-md-5">
                     {% if messages %}
                         {% for message in messages %}
-                            <div class="alert alert-danger alert-dismissible fade show small py-2" role="alert">
+                            <div class="alert alert-danger alert-dismissible fade show small py-2 border-0" style="background-color: #fdf2f2; color: #c84141; border-left: 3px solid #c84141 !important;" role="alert">
                                 {{ message }}
                                 <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
@@ -23,55 +76,43 @@
                     <form method="POST" action="{% url 'register' %}">
                         {% csrf_token %}
                         <div class="form-floating mb-3">
-                            <input type="text" name="username" class="form-control bg-light border-0" id="regUsername" placeholder="Username" style="border-radius: 12px;" required>
-                            <label for="regUsername" class="text-secondary small">Tên đăng nhập</label>
+                            <input type="text" name="username" class="form-control lux-form-control" id="regUsername" placeholder="Username" required>
+                            <label for="regUsername" style="color: var(--stone); font-size: 0.9rem;">Tên đăng nhập</label>
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input type="email" name="email" class="form-control bg-light border-0" id="regEmail" placeholder="Email" style="border-radius: 12px;" required>
-                            <label for="regEmail" class="text-secondary small">Địa chỉ Email</label>
+                            <input type="email" name="email" class="form-control lux-form-control" id="regEmail" placeholder="Email" required>
+                            <label for="regEmail" style="color: var(--stone); font-size: 0.9rem;">Địa chỉ Email</label>
                         </div>
                         
                         <div class="form-floating mb-3">
-                            <input type="password" name="password" class="form-control bg-light border-0" id="regPassword" placeholder="Password" style="border-radius: 12px;" required>
-                            <label for="regPassword" class="text-secondary small">Mật khẩu (Tối thiểu 8 ký tự)</label>
+                            <input type="password" name="password" class="form-control lux-form-control" id="regPassword" placeholder="Password" required>
+                            <label for="regPassword" style="color: var(--stone); font-size: 0.9rem;">Mật khẩu (Tối thiểu 8 ký tự)</label>
                         </div>
 
                         <div class="form-floating mb-4">
-                            <input type="password" name="password_confirm" class="form-control bg-light border-0" id="regPasswordConfirm" placeholder="Confirm Password" style="border-radius: 12px;" required>
-                            <label for="regPasswordConfirm" class="text-secondary small">Xác nhận mật khẩu</label>
+                            <input type="password" name="password_confirm" class="form-control lux-form-control" id="regPasswordConfirm" placeholder="Confirm Password" required>
+                            <label for="regPasswordConfirm" style="color: var(--stone); font-size: 0.9rem;">Xác nhận mật khẩu</label>
                         </div>
 
-                        <div class="form-check mb-4 px-1 small text-muted">
-                            <input class="form-check-input" type="checkbox" id="terms" required checked>
+                        <div class="form-check mb-4 px-1 small" style="color: var(--stone);">
+                            <input class="form-check-input" type="checkbox" id="terms" style="border-color: var(--gold-deep);" required checked>
                             <label class="form-check-label" for="terms">
-                                Tôi đồng ý với các <a href="#" class="text-decoration-none" style="color: #042759;">Điều khoản & Chính sách</a> của khách sạn.
+                                Tôi đồng ý với các <a href="#" class="lux-link">Điều khoản & Chính sách</a> của hệ thống.
                             </label>
                         </div>
 
-                        <button type="submit" class="btn btn-lg w-100 fw-bold text-white shadow-sm py-2" style="background-color: #042759; border-radius: 12px; transition: all 0.3s ease;">
+                        <button type="submit" class="btn w-100 btn-lux-primary">
                             ĐĂNG KÝ TÀI KHOẢN
                         </button>
                     </form>
                 </div>
-
-                <div class="card-footer text-center bg-transparent border-0 pb-3">
-                    <p class="text-muted small mb-0">Đã có tài khoản? <a href="{% url 'login' %}" class="fw-bold text-decoration-none" style="color: #042759;">Đăng nhập ngay</a></p>
+                <br>
+                <div class="card-footer text-center bg-transparent border-0 pb-3 pt-0">
+                    <p class="small mb-0" style="color: var(--stone);">Đã có tài khoản? <a href="{% url 'login' %}" class="lux-link">Đăng nhập ngay</a></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .form-control:focus {
-        background-color: #fff !important;
-        box-shadow: 0 0 0 0.25rem rgba(4, 39, 89, 0.15) !important;
-        border-color: #042759 !important;
-    }
-    .btn:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
-    }
-</style>
 {% endblock %}

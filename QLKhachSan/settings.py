@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -44,6 +45,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'django.contrib.humanize',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -69,6 +72,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'booking.context_processors.unread_messages',
             ],
         },
     },
@@ -118,6 +122,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+USE_THOUSAND_SEPARATOR = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
@@ -139,26 +144,84 @@ UNFOLD = {
     "SITE_HEADER": "Quản lý Booking",
     "SIDEBAR": {
         "show_search": True,  # Bật thanh tìm kiếm
-        "show_all_applications": True, # Hiển thị menu mặc định nếu quên cấu hình
+        
+        # 1. BẮT BUỘC ĐỔI THÀNH FALSE ĐỂ TẮT MENU MẶC ĐỊNH LỘN XỘN CỦA DJANGO
+        "show_all_applications": False, 
+        
         "navigation": [
             {
                 "title": "QUẢN LÝ ĐẶT PHÒNG",
-                "separator": True, # Đường kẻ ngang phân cách
+                "separator": True,
                 "items": [
                     {
+                        "title": "Sơ đồ Phòng (Map)",
+                        "icon": "grid_view",
+                        "link": reverse_lazy("admin_room_map"),
+                        "permission": lambda request: request.user.has_perm("booking.view_room"),
+                    },
+                    {
                         "title": "Danh sách Phòng",
-                        "icon": "bed", # Tên icon từ Material Symbols
+                        "icon": "bed",
                         "link": "/admin/booking/room/",
+                        # Chỉ người có quyền xem phòng (Lễ tân, Quản lý) mới thấy
+                        "permission": lambda request: request.user.has_perm("booking.view_room"),
                     },
                     {
                         "title": "Loại Phòng",
                         "icon": "hotel_class",
                         "link": "/admin/booking/roomcategory/",
+                        # Chỉ Superuser mới được phép tạo/sửa Loại phòng
+                        "permission": lambda request: request.user.is_superuser,
                     },
                     {
                         "title": "Đơn Đặt Phòng",
                         "icon": "book_online",
                         "link": "/admin/booking/booking/",
+                        "permission": lambda request: request.user.has_perm("booking.view_booking"),
+                    },
+                    {
+                        "title": "Tin nhắn khách hàng",
+                        "icon": "chat",
+                        "link": "/admin/booking/conversation/",
+                        "permission": lambda request: request.user.has_perm("booking.view_conversation"),
+                    },
+                ],
+            },
+            {
+                "title": "QUẢN LÝ GIÁ & KHUYẾN MÃI",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Gói Giá (Rate Plan)",
+                        "icon": "request_quote", 
+                        "link": "/admin/booking/rateplan/",
+                        "permission": lambda request: request.user.is_superuser,
+                    },
+                    {
+                        "title": "Sự Kiện & Lễ Tết",
+                        "icon": "event_note",
+                        "link": "/admin/booking/seasonalpricing/",
+                        "permission": lambda request: request.user.is_superuser,
+                    },
+                    
+                    {
+                        "title": "Mã Khuyến Mãi",
+                        "icon": "local_activity",
+                        "link": "/admin/booking/coupon/",
+                        "permission": lambda request: request.user.is_superuser,
+                    },
+                ],
+            },
+            {
+                "title": "TRUNG TÂM QUẢN TRỊ",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Báo Cáo Doanh Thu",
+                        "icon": "monitoring",
+                        "link": reverse_lazy("admin_dashboard_reports"),
+                        # Đổi thành is_superuser để giấu đi với Lễ tân
+                        "permission": lambda request: request.user.is_superuser, 
                     },
                 ],
             },
@@ -170,11 +233,13 @@ UNFOLD = {
                         "title": "Người dùng",
                         "icon": "people",
                         "link": "/admin/auth/user/",
+                        "permission": lambda request: request.user.is_superuser,
                     },
                     {
                         "title": "Phân quyền (Groups)",
                         "icon": "admin_panel_settings",
                         "link": "/admin/auth/group/",
+                        "permission": lambda request: request.user.is_superuser,
                     },
                 ],
             },
@@ -191,3 +256,47 @@ LOGIN_REDIRECT_URL = '/' # Đăng nhập xong thì về trang chủ
 LOGOUT_REDIRECT_URL = '/'
 # Cho phép chuyển hướng thẳng sang Google mà không cần qua trang xác nhận
 SOCIALACCOUNT_LOGIN_ON_GET = True
+ #VNpay
+  
+# CẤU HÌNH VNPAY SANDBOX (THỬ NGHIỆM)
+ 
+VNPAY_TMN_CODE = "3LXKOXGG"  # Đây là mã TMN dùng thử mặc định của VNPay Sandbox
+VNPAY_HASH_SECRET_KEY = "T52KBYTMGZFYFUE8QQSLFXRLUDJC0YA2"  # Chuỗi bí mật dùng thử mặc định
+VNPAY_PAYMENT_URL = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"  # Link cổng giả lập
+VNPAY_RETURN_URL = "http://127.0.0.1:8000/payment/vnpay-return/"  # Link web của bạn nhận kết quả
+
+
+ 
+# CẤU HÌNH ALLAUTH & GOOGLE LOGIN
+ 
+# Bắt buộc hệ thống phải lấy email
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
+ACCOUNT_LOGIN_METHODS = {'username', 'email'}
+SOCIALACCOUNT_QUERY_EMAILS = True
+
+# Cấu hình xin quyền truy cập (Scope) từ Google
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    }
+}
+
+# gui mail sau dat phong
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'votrkhuong@gmail.com'
+EMAIL_HOST_PASSWORD = 'idvcymhrwstsgtgm' # Mật khẩu ứng dụng gồm 16 chữ cái
+#Định dạng giá
+USE_THOUSAND_SEPARATOR = True
+THOUSAND_SEPARATOR = '.'
+DECIMAL_SEPARATOR = ','
+NUMBER_GROUPING = 3

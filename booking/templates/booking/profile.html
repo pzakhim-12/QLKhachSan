@@ -1,105 +1,424 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container mt-5 mb-5">
-    
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap');
 
+    .lux-profile-page {
+        --ink: #05203c;
+        --ink-soft: #0e3a63;
+        --gold: #b8905a;
+        --gold-deep: #93703f;
+        --gold-soft: #ecdfc4;
+        --ivory: #faf7f1;
+        --line: #e6ddc8;
+        --stone: #6b6459;
+        --stone-light: #a39c8c;
+        font-family: 'Inter', sans-serif;
+        color: var(--ink);
+    }
+    
+    .lux-profile-page .lux-serif { font-family: 'Playfair Display', serif; }
+    .lux-profile-page .lux-serif, .lux-price {
+        font-variant-numeric: lining-nums;
+        font-feature-settings: "lnum" 1, "pnum" 1;
+    }
+
+    /* ---------- Thẻ & Khối ---------- */
+    .lux-card {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(5, 32, 60, 0.04);
+    }
+    
+    .lux-wallet-card {
+        background: linear-gradient(135deg, var(--ink) 0%, var(--ink-soft) 100%);
+        color: var(--gold-soft);
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--ink);
+    }
+    .lux-wallet-card::after {
+        content: '';
+        position: absolute;
+        top: -40%; right: -10%;
+        width: 140px; height: 140px;
+        background: radial-gradient(circle, rgba(184, 144, 90, 0.15) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .lux-avatar-circle {
+        width: 90px; height: 90px;
+        background: var(--ivory);
+        color: var(--gold-deep);
+        font-size: 2.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 2px solid var(--gold);
+        margin: 0 auto;
+    }
+
+    /* ---------- Thông tin liên hệ ---------- */
+    .lux-info-box {
+        background: var(--ivory);
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+    }
+    .lux-info-icon { color: var(--gold-deep); }
+    .lux-info-label { color: var(--stone); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .lux-info-value { color: var(--ink); font-weight: 600; font-size: 0.9rem; }
+
+    /* ---------- Bảng dữ liệu ---------- */
+    .lux-table th {
+        background-color: var(--ivory);
+        color: var(--stone);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        border-bottom: 1px solid var(--line);
+        padding: 1rem;
+    }
+    .lux-table td {
+        vertical-align: middle;
+        border-bottom: 1px solid var(--line);
+        padding: 1.2rem 1rem;
+        color: var(--stone);
+    }
+    .lux-table tr:hover td { background-color: #faf9f7; }
+    .lux-price { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; color: var(--gold-deep); }
+
+    /* ---------- Badges Trạng thái ---------- */
+    .lux-badge {
+        font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.35rem 0.8rem; border-radius: 50px; display: inline-block;
+    }
+    .lux-badge-success { background: var(--ivory); color: var(--gold-deep); border: 1px solid var(--gold); }
+    .lux-badge-warning { background: #fffdf5; color: #b48600; border: 1px solid #eaddb1; }
+    .lux-badge-info { background: var(--ink); color: var(--gold-soft); border: 1px solid var(--ink); }
+    .lux-badge-danger { background: #fdf2f2; color: #c84141; border: 1px solid #f3d8d8; }
+    .lux-badge-muted { background: #f8f9fa; color: var(--stone-light); border: 1px solid #e9ecef; }
+
+    /* ---------- ĐỒNG BỘ CSS NÚT BẤM (TỪ ROOM_LIST.HTML) ---------- */
+    
+    /* Nút chính (Nền Navy, chữ Vàng) - Áp dụng cho Hỗ trợ, Thanh toán */
+    .btn-lux-outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        background: var(--ink);
+        color: var(--gold-soft);
+        border: 1px solid var(--ink);
+        border-radius: 50px;
+        padding: 0.6rem 1.4rem;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        text-decoration: none !important;
+        transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.2s ease;
+    }
+    .btn-lux-outline:hover {
+        background: var(--gold-deep);
+        border-color: var(--gold-deep);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    /* Nút Hủy (Outline Đỏ) */
+    .btn-lux-danger-outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        background: transparent; 
+        color: #c84141; 
+        border: 1px solid #f3d8d8; 
+        border-radius: 50px; 
+        padding: 0.6rem 1.4rem;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        text-decoration: none !important;
+        transition: all 0.25s ease;
+    }
+    .btn-lux-danger-outline:hover { 
+        background: #c84141; color: #fff; border-color: #c84141; transform: translateY(-2px); 
+    }
+
+    /* Nút Disabled (Nền xám ngà Ivory) - Áp dụng cho Không hoàn hủy, Đóng */
+    .btn-lux-sold {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        background: var(--ivory);
+        color: var(--stone);
+        border: 1px solid var(--line);
+        border-radius: 50px;
+        padding: 0.6rem 1.4rem;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    /* Nút Áp dụng Form (Nền Navy, padding rộng hơn) */
+    .btn-lux-apply {
+        display: inline-flex; align-items: center; justify-content: center;
+        background: var(--ink); color: var(--gold-soft); border: 1px solid var(--ink); border-radius: 50px; text-transform: uppercase; font-size: 0.76rem; letter-spacing: 0.1em; font-weight: 700; padding: 0.6rem 1.8rem; transition: all 0.25s ease;
+    }
+    .btn-lux-apply:hover { background: var(--gold-deep); border-color: var(--gold-deep); color: #fff; transform: translateY(-2px); }
+
+    /* Nút Ghost viền (Chỉnh sửa hồ sơ) */
+    .btn-lux-ghost-pill {
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+        background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 50px; padding: 0.65rem 1.8rem; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none !important; transition: background 0.25s ease, color 0.25s ease, border-color 0.2s ease;
+    }
+    .btn-lux-ghost-pill:hover { background: var(--ivory); color: var(--ink); border-color: var(--gold); }
+</style>
+
+<div class="container mt-5 mb-5 lux-profile-page">
     <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-body text-center p-4">
-                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
-                        <i class="bi bi-person-fill"></i>
+        <div class="col-lg-4">
+            <div class="lux-card text-center p-4 h-100">
+                <div class="mt-2 mb-4">
+                    <div class="lux-avatar-circle shadow-sm">
+                        <i class="bi bi-person"></i>
                     </div>
-                    <h3 class="fw-bold">{{ user.username }}</h3>
-                    <p class="text-secondary mb-1"><i class="bi bi-envelope-fill me-2"></i> {{ user.email|default:"Chưa có email" }}</p>
-                    <p class="text-secondary"><i class="bi bi-telephone-fill me-2"></i> {{ profile.phone_number }}</p>
-                    
-                    <hr class="my-4">
-                    
-                    <div class="bg-light p-3 rounded-3 text-start">
-                        <span class="text-muted small text-uppercase fw-bold">Ví thanh toán</span>
-                        <h2 class="text-success fw-bold mt-1 mb-0">{{ profile.balance }} <span class="fs-6 text-muted">VNĐ</span></h2>
-                        <div class="mt-3">
-                            <button class="btn btn-outline-primary btn-sm w-100 disabled">Nạp tiền (Sắp ra mắt)</button>
+                </div>
+                
+                <h3 class="lux-serif fw-bold mb-1">{{ user.username }}</h3>
+                <div class="d-flex justify-content-center align-items-center gap-2 mb-4">
+                    <span class="lux-badge lux-badge-success"><i class="bi bi-shield-check me-1"></i>Thành viên VIP</span>
+                </div>
+
+                <div class="text-start lux-info-box p-3 mb-4">
+                    <div class="mb-3 d-flex align-items-center border-bottom border-light pb-2">
+                        <i class="bi bi-envelope-at lux-info-icon me-3 fs-5 flex-shrink-0"></i>
+                        <div style="min-width: 0; width: 100%;">
+                            <span class="lux-info-label d-block">Địa chỉ Email</span>
+                            {% if user.email %}
+                                <span class="lux-info-value d-block text-truncate" title="{{ user.email }}">{{ user.email }}</span>
+                            {% else %}
+                                <span class="text-danger fw-medium fst-italic" style="font-size: 0.85rem;">Chưa liên kết</span>
+                            {% endif %}
                         </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-telephone lux-info-icon me-3 fs-5 flex-shrink-0"></i>
+                        <div style="min-width: 0; width: 100%;">
+                            <span class="lux-info-label d-block">Số điện thoại</span>
+                            {% if profile.phone_number and profile.phone_number != 'Chưa cập nhật' %}
+                                <span class="lux-info-value d-block text-truncate" title="{{ profile.phone_number }}">{{ profile.phone_number }}</span>
+                            {% else %}
+                                <span class="text-danger fw-medium fst-italic" style="font-size: 0.85rem;">Chưa cập nhật</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-lux-ghost-pill w-100 mb-4" data-bs-toggle="modal" data-bs-target="#updateProfileModal">
+                    <i class="bi bi-pencil-square"></i> Chỉnh sửa hồ sơ
+                </button>
+                
+                <div class="lux-wallet-card p-4 text-start shadow-sm">
+                    <span class="small text-uppercase fw-bold" style="letter-spacing: 0.1em; opacity: 0.8;">Số dư ví ZagoPay</span>
+                    <h2 class="lux-serif fw-bold mt-2 mb-0 text-white">{{ profile.balance|floatformat:"0g" }} <span class="fs-6" style="opacity: 0.8; font-family: 'Inter', sans-serif;">VNĐ</span></h2>
+                    <div class="mt-4">
+                        <button class="btn btn-light btn-sm fw-bold w-100 rounded-pill" style="color: var(--ink); padding: 0.6rem;" onclick="alert('Tính năng nạp tiền đang được bảo trì.')">
+                            <i class="bi bi-wallet2 me-1"></i> Nạp tiền ngay
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0 rounded-4 h-100">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-2">
-                    <h4 class="fw-bold text-primary"><i class="bi bi-clock-history me-2"></i>Lịch sử đặt phòng</h4>
+        <div class="col-lg-8">
+            <div class="lux-card h-100 overflow-hidden">
+                <div class="bg-white border-bottom p-4" style="border-color: var(--line) !important;">
+                    <h4 class="lux-serif fw-bold mb-0"><i class="bi bi-clock-history me-2" style="color: var(--gold-deep);"></i> Lịch sử lưu trú</h4>
                 </div>
-                <div class="card-body p-4">
+                <div class="p-0">
                     {% if bookings %}
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
+                            <table class="table lux-table align-middle mb-0">
+                                <thead>
                                     <tr>
-                                        <th>Phòng</th>
-                                        <th>Check-in</th>
-                                        <th>Check-out</th>
-                                        <th>Tổng tiền</th>
+                                        <th class="ps-4">Phòng</th>
+                                        <th>Lịch trình</th>
+                                        <th>Chi phí</th>
                                         <th>Trạng thái</th>
-                                        <th>Thao tác</th>
+                                        <th class="text-center pe-4" style="min-width: 140px;">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for b in bookings %}
                                     <tr>
-                                        <td class="fw-bold">{{ b.room.room_number }}</td>
-                                        <td>{{ b.check_in|date:"d/m/Y" }}</td>
-                                        <td>{{ b.check_out|date:"d/m/Y" }}</td>
-                                        <td class="text-danger fw-semibold">{{ b.total_price }}đ</td>
-                                        <td>
-                                            {% if b.is_active %}
-                                                <span class="badge bg-success">Thành công</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">Đã hủy</span>
-                                            {% endif %}
+                                        <td class="ps-4">
+                                            <span class="lux-serif fw-bold text-dark fs-5 d-block">{{ b.room.room_number }}</span>
+                                            <span class="badge bg-light text-secondary border mt-1" style="font-weight: 500;">{{ b.room.category.name }}</span>
                                         </td>
                                         <td>
-                                            {% if b.is_active %}
-                                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal{{ b.id }}">Hủy</button>
-
-                                                <div class="modal fade" id="cancelModal{{ b.id }}" tabindex="-1">
-                                                    <div class="modal-dialog modal-dialog-centered">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header border-0">
-                                                                <h5 class="modal-title fw-bold">Xác nhận hủy phòng</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                            </div>
-                                                            <div class="modal-body text-center py-4">
-                                                                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
-                                                                <p class="fs-5 mt-3">Bạn có chắc chắn muốn hủy đặt phòng <strong>{{ b.room.room_number }}</strong> không?</p>
-                                                            </div>
-                                                            <div class="modal-footer border-0 d-flex justify-content-center">
-                                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Không, quay lại</button>
-                                                                <a href="{% url 'cancel_booking' b.id %}" class="btn btn-danger px-4">Đồng ý Hủy</a>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            {% else %}
-                                                <button class="btn btn-sm btn-light text-muted" disabled>Đã hủy</button>
+                                            <div class="small mb-1"><i class="bi bi-box-arrow-in-right text-success me-1"></i> {{ b.check_in|date:"d/m/Y" }}</div>
+                                            <div class="small"><i class="bi bi-box-arrow-right text-danger me-1"></i> {{ b.check_out|date:"d/m/Y" }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="lux-price">{{ b.total_price|floatformat:"0g" }}đ</div>
+                                            <div class="small" style="color: var(--stone-light);">Cọc: {{ b.deposit_amount|floatformat:"0g" }}đ</div>
+                                        </td>
+                                        <td>
+                                            {% if b.cancellation_requested %}
+                                                <span class="lux-badge lux-badge-warning"><i class="bi bi-hourglass-split"></i> Chờ duyệt hủy</span>
+                                            {% elif b.status == 'PENDING' %}
+                                                <span class="lux-badge lux-badge-warning">Chờ thanh toán</span>
+                                            {% elif b.status == 'CONFIRMED' %}
+                                                <span class="lux-badge lux-badge-success">Đã đặt cọc</span>
+                                            {% elif b.status == 'CHECKED_IN' %}
+                                                <span class="lux-badge lux-badge-info">Đang lưu trú</span>
+                                            {% elif b.status == 'CHECKED_OUT' %}
+                                                <span class="lux-badge lux-badge-muted">Đã trả phòng</span>
+                                            {% elif b.status == 'CANCELLED' %}
+                                                <span class="lux-badge lux-badge-muted">Đã hủy</span>
+                                            {% elif b.status == 'EXPIRED' %}
+                                                <span class="lux-badge lux-badge-danger"><i class="bi bi-x-circle"></i> Quá hạn</span>
+                                            {% elif not b.is_active %}
+                                                <span class="lux-badge lux-badge-muted">Đã hủy</span>
                                             {% endif %}
+                                        </td>
+                                        <td class="text-center pe-4">
+                                            <div class="d-flex flex-column gap-2">
+                                                <a href="{% url 'new_conversation' %}?booking={{ b.id }}" class="btn-lux-outline w-100" title="Liên hệ hỗ trợ">
+                                                    <i class="bi bi-chat-dots"></i> Hỗ trợ
+                                                </a>
+
+                                                {% if not b.is_active or b.status == 'CANCELLED' or b.status == 'EXPIRED' or b.cancellation_requested %}
+                                                    <button class="btn-lux-sold w-100" disabled>
+                                                        <i class="bi bi-slash-circle"></i> Đóng
+                                                    </button>
+                                                    
+                                                {% elif b.rate_plan and b.rate_plan.cancellation_policy == 'NON_REFUNDABLE' %}
+                                                    <button class="btn-lux-sold w-100" disabled title="Gói không hoàn tiền">
+                                                        <i class="bi bi-lock"></i> Không hoàn hủy
+                                                    </button>
+                                                    
+                                                {% elif b.status == 'PENDING' %}
+                                                    <a href="{% url 'create_payment' b.id %}" class="btn-lux-outline w-100">
+                                                        <i class="bi bi-credit-card"></i> Thanh toán
+                                                    </a>
+                                                    <button class="btn-lux-danger-outline w-100" data-bs-toggle="modal" data-bs-target="#cancelModal{{ b.id }}">
+                                                        <i class="bi bi-x-circle"></i> Hủy
+                                                    </button>
+                                                    
+                                                {% elif b.status == 'CONFIRMED' %}
+                                                    <button class="btn-lux-danger-outline w-100" data-bs-toggle="modal" data-bs-target="#cancelModal{{ b.id }}">
+                                                        <i class="bi bi-x-circle"></i> Hủy phòng
+                                                    </button>
+                                                {% else %}
+                                                    <button class="btn-lux-sold w-100" disabled>
+                                                        <i class="bi bi-dash-circle"></i> Không thể hủy
+                                                    </button>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                     </tr>
+
+                                    {% if b.is_active and not b.cancellation_requested and b.status in 'PENDING,CONFIRMED' %}
+                                        <div class="modal fade" id="cancelModal{{ b.id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content border-0" style="border-radius: 16px;">
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body text-center px-5 pb-4">
+                                                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px; background: #fdf2f2;">
+                                                            <i class="bi bi-exclamation-triangle text-danger fs-2"></i>
+                                                        </div>
+                                                        <h4 class="lux-serif fw-bold mb-3 text-dark">Xác nhận hủy phòng</h4>
+                                                        <p style="color: var(--stone); font-size: 0.95rem; margin-bottom: 1rem;">Bạn có chắc chắn muốn hủy đặt phòng <strong style="color: var(--ink);">Phòng {{ b.room.room_number }}</strong> không?</p>
+                                                        
+                                                        <div style="background: var(--ivory); border: 1px dashed var(--gold-deep); border-radius: 8px; padding: 1rem; text-align: left; margin-bottom: 0.5rem;">
+                                                            {% if b.status == 'PENDING' %}
+                                                                <h6 style="color: var(--ink); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.4rem;"><i class="bi bi-info-circle-fill me-1" style="color: var(--gold-deep);"></i> Đơn Chưa Thanh Toán</h6>
+                                                                <p style="color: var(--stone); font-size: 0.85rem; margin-bottom: 0;">Đơn đặt phòng này chưa được thanh toán cọc nên bạn có thể hủy an toàn và không mất phí.</p>
+                                                                
+                                                            {% elif b.rate_plan and b.rate_plan.cancellation_policy == 'NON_REFUNDABLE' %}
+                                                                <h6 style="color: #c84141; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.4rem;"><i class="bi bi-shield-x me-1"></i> Gói Không Hoàn Hủy</h6>
+                                                                <p style="color: var(--stone); font-size: 0.85rem; margin-bottom: 0;">Theo chính sách gói giá bạn đã chọn, nếu xác nhận hủy, bạn sẽ <strong style="color: #c84141;">mất 100% số tiền cọc ({{ b.deposit_amount|floatformat:"0g" }} VNĐ)</strong>. Hệ thống không hỗ trợ hoàn tiền hoặc bảo lưu cho đơn này.</p>
+                                                                
+                                                            {% else %}
+                                                                <h6 style="color: var(--ink); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.4rem;"><i class="bi bi-shield-check me-1" style="color: var(--gold-deep);"></i> Gói Tiêu Chuẩn (Bảo Lưu Cọc)</h6>
+                                                                <p style="color: var(--stone); font-size: 0.85rem; margin-bottom: 0;">Số tiền cọc <strong style="color: var(--ink);">{{ b.deposit_amount|floatformat:"0g" }} VNĐ</strong> của bạn sẽ được <strong style="color: var(--gold-deep);">Bảo lưu làm Voucher</strong> để sử dụng cho lần đặt phòng tiếp theo (Không hoàn tiền mặt).</p>
+                                                            {% endif %}
+                                                        </div>
+                                                        </div>
+                                                    <div class="modal-footer border-0 d-flex justify-content-center gap-3 pb-5">
+                                                        <button type="button" class="btn-lux-ghost-pill" data-bs-dismiss="modal">Trở lại</button>
+                                                        <a href="{% url 'cancel_booking' b.id %}" class="btn-lux-apply" style="background: #c84141; border-color: #c84141; color: white;">Xác nhận Hủy</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                     {% else %}
-                        <div class="text-center py-5">
-                            <i class="bi bi-journal-x text-muted" style="font-size: 4rem;"></i>
-                            <h5 class="mt-3 text-secondary">Bạn chưa có lịch sử đặt phòng nào.</h5>
-                            <a href="{% url 'room_list' %}" class="btn btn-primary mt-3">Khám phá phòng ngay</a>
+                        <div class="text-center py-5 my-4">
+                            <i class="bi bi-journal-x d-block mb-3" style="font-size: 4rem; color: var(--line);"></i>
+                            <h5 class="lux-serif fw-bold mb-2">Chưa có chuyến đi nào</h5>
+                            <p style="color: var(--stone);">Bạn chưa thực hiện bất kỳ giao dịch đặt phòng nào.</p>
+                            <a href="{% url 'room_list' %}" class="btn-lux-apply mt-3 text-decoration-none d-inline-block">Khám phá phòng ngay</a>
                         </div>
                     {% endif %}
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="updateProfileModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                <h5 class="lux-serif fw-bold mb-0" style="color: var(--ink);"><i class="bi bi-person-lines-fill me-2" style="color: var(--gold-deep);"></i> Hồ sơ khách hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'user_profile' %}">
+                {% csrf_token %}
+                <div class="modal-body px-4 py-4">
+                    <p style="color: var(--stone); font-size: 0.9rem; margin-bottom: 1.5rem;">Vui lòng điền chính xác thông tin để khách sạn tiện liên lạc xác nhận dịch vụ.</p>
+                    
+                    <div class="mb-4">
+                        <label class="form-label" style="font-size: 0.72rem; font-weight: 700; color: var(--stone); text-transform: uppercase; letter-spacing: 0.08em;">Địa chỉ Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0" style="border-color: var(--line);"><i class="bi bi-envelope" style="color: var(--gold-deep);"></i></span>
+                            <input type="email" class="form-control border-start-0 ps-0" style="border-color: var(--line); box-shadow: none;" name="email" value="{{ user.email }}" placeholder="Nhập email của bạn...">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: 0.72rem; font-weight: 700; color: var(--stone); text-transform: uppercase; letter-spacing: 0.08em;">Số điện thoại</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0" style="border-color: var(--line);"><i class="bi bi-telephone" style="color: var(--gold-deep);"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" style="border-color: var(--line); box-shadow: none;" name="phone" value="{% if profile.phone_number != 'Chưa cập nhật' %}{{ profile.phone_number }}{% endif %}" placeholder="Nhập số điện thoại...">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 px-4 pb-4 pt-0">
+                    <button type="button" class="btn-lux-ghost-pill" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn-lux-apply">Lưu thay đổi</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

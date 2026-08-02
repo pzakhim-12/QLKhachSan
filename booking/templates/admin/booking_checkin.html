@@ -1,0 +1,72 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block title %}Check-in - Đơn #{{ booking.id }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Trang chủ</a>
+    &rsaquo; <a href="{% url 'admin:booking_booking_changelist' %}">Đơn đặt phòng</a>
+    &rsaquo; Check-in đơn #{{ booking.id }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 720px; margin: 40px auto; background: #1e2937; padding: 30px; border-radius: 12px; border: 1px solid #334155;">
+    <h2 style="color: #e2e8f0; margin-bottom: 20px;">
+        📋 Check-in Đơn #{{ booking.id }}
+    </h2>
+    
+    <div class="alert alert-info" style="background: #1e40af; color: white; border: none;">
+        <strong>Phòng:</strong> {{ booking.room.room_number }} - {{ booking.room.category.name }}<br>
+        <strong>Thời gian:</strong> {{ booking.check_in|date:"d/m/Y" }} → {{ booking.check_out|date:"d/m/Y" }}
+    </div>
+
+    <form method="post" style="margin-top: 20px;">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: 25px;">
+            <h3 style="color: #94a3b8; margin-bottom: 15px;">Thông tin khách lưu trú (BẮT BUỘC)</h3>
+            
+            <div style="margin-bottom: 18px;">
+                <label style="color: #e2e8f0; display: block; margin-bottom: 6px;">Họ và tên khách <span style="color: #ef4444;">*</span></label>
+                {{ form.guest_full_name }}
+            </div>
+            
+            <div style="margin-bottom: 18px;">
+                <label style="color: #e2e8f0; display: block; margin-bottom: 6px;">Số CCCD / CMND / Passport <span style="color: #ef4444;">*</span></label>
+                {{ form.guest_cccd }}
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+                <label style="color: #e2e8f0; display: block; margin-bottom: 6px;">Số điện thoại khách</label>
+                {{ form.guest_phone }}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+            <button type="submit" class="btn btn-success btn-lg" style="flex: 1;">
+                <i class="bi bi-check-circle"></i> Xác nhận Check-in
+            </button>
+            <a href="{% url 'admin:booking_booking_changelist' %}" class="btn btn-secondary btn-lg" style="flex: 1; text-align: center; line-height: 1.5;">
+                Quay lại
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+    input.form-control {
+        background: #334155 !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #475569 !important;
+        padding: 10px 12px;
+        border-radius: 6px;
+        width: 100%;
+    }
+    input.form-control:focus {
+        border-color: #60a5fa !important;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,383 @@
+{% extends "admin/base_site.html" %}
+{% load humanize %}
+
+{% block title %}Báo Cáo Doanh Thu Chuyên Sâu | Quản Trị Hệ Thống{% endblock %}
+
+<!-- GHI ĐÈ BLOCK NÀY ĐỂ XÓA CHỮ "Welcome quanly" CỦA UNFOLD -->
+{% block content_title %}{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+    /* ÉP XUNG CSS: Bù đắp các class Tailwind bị Unfold cắt xén mất trong chế độ Dark Mode */
+    /* 1. Nhóm màu Xám cơ bản (Nền, viền, chữ chuẩn) */
+    html.dark .dark\:bg-gray-800 { background-color: #1f2937 !important; }
+    html.dark .dark\:bg-gray-900 { background-color: #111827 !important; }
+    html.dark .dark\:bg-gray-700 { background-color: #374151 !important; }
+    html.dark .dark\:border-gray-800 { border-color: #1f2937 !important; }
+    html.dark .dark\:border-gray-700 { border-color: #374151 !important; }
+    html.dark .dark\:border-gray-600 { border-color: #4b5563 !important; }
+    html.dark .dark\:text-white { color: #ffffff !important; }
+    html.dark .dark\:text-gray-400 { color: #9ca3af !important; }
+    html.dark .dark\:text-gray-300 { color: #d1d5db !important; }
+    html.dark .dark\:text-gray-200 { color: #e5e7eb !important; }
+    
+    /* 2. Nhóm màu Nhấn (Accent Colors) cho Icon, Thẻ, và Tiền tệ */
+    html.dark .dark\:bg-blue-900 { background-color: #1e3a8a !important; }
+    html.dark .dark\:text-blue-400 { color: #60a5fa !important; }
+    html.dark .dark\:text-emerald-400 { color: #34d399 !important; }
+    html.dark .dark\:border-emerald-800 { border-color: #065f46 !important; }
+    html.dark .dark\:text-red-400 { color: #f87171 !important; }
+    html.dark .dark\:border-red-800 { border-color: #991b1b !important; }
+    html.dark .dark\:text-cyan-400 { color: #22d3ee !important; }
+    html.dark .dark\:text-amber-400 { color: #fbbf24 !important; }
+    html.dark .dark\:text-purple-400 { color: #c084fc !important; }
+
+    /* Chỉnh màu mượt hơn khi hover vào các dòng trong Bảng */
+    html.dark table tbody tr:hover, html.dark ul li:hover { background-color: #374151 !important; transition: all 0.2s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 w-full font-sans text-gray-900 dark:text-gray-100">
+    
+    <!-- Tiêu đề & Lọc thời gian -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 pb-5 border-b border-gray-200 dark:border-gray-700">
+        <div>
+            <h1 class="text-2xl font-bold mb-2">Hiệu suất Kinh doanh Khách sạn</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 m-0">Phân tích tăng trưởng và chỉ số chuyên ngành Hospitality</p>
+        </div>
+        <form method="GET" class="flex items-center">
+            <select name="period" onchange="this.form.submit()" class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none">
+                <option value="7" {% if period == '7' %}selected{% endif %}>7 Ngày qua</option>
+                <option value="30" {% if period == '30' %}selected{% endif %}>30 Ngày qua</option>
+                <option value="90" {% if period == '90' %}selected{% endif %}>Quý qua (90 ngày)</option>
+            </select>
+        </form>
+    </div>
+
+    <!-- HÀNG 1: DOANH THU & TĂNG TRƯỞNG -->
+    <h6 class="font-bold text-gray-500 dark:text-gray-400 uppercase text-xs mb-4 tracking-wider"><i class="bi bi-graph-up-arrow mr-2"></i>Tăng trưởng kinh doanh</h6>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-transform hover:-translate-y-1">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 dark:text-gray-400 font-bold text-xs uppercase mb-2">Tổng Doanh Thu ({{ period }} ngày)</p>
+                    <h2 class="text-3xl font-extrabold mb-3 text-gray-900 dark:text-white">{{ current_revenue|floatformat:"0g"|intcomma }} <span class="text-base text-gray-500 dark:text-gray-400 font-medium">VNĐ</span></h2>
+                    
+                    <div class="flex items-center gap-2">
+                        {% if revenue_growth >= 0 %}
+                            <span class="bg-emerald-100 dark:bg-gray-700 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-md text-sm font-bold flex items-center border border-emerald-200 dark:border-gray-600">
+                                <i class="bi bi-arrow-up-right mr-1"></i> +{{ revenue_growth }}%
+                            </span>
+                        {% else %}
+                            <span class="bg-red-100 dark:bg-gray-700 text-red-700 dark:text-red-400 px-2.5 py-1 rounded-md text-sm font-bold flex items-center border border-red-200 dark:border-gray-600">
+                                <i class="bi bi-arrow-down-right mr-1"></i> {{ revenue_growth }}%
+                            </span>
+                        {% endif %}
+                        <span class="text-sm text-gray-500 dark:text-gray-400">so với kỳ trước</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-transform hover:-translate-y-1">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 dark:text-gray-400 font-bold text-xs uppercase mb-2">Lượt Đặt Phòng ({{ period }} ngày)</p>
+                    <h2 class="text-3xl font-extrabold mb-3 text-gray-900 dark:text-white">{{ total_orders }} <span class="text-base text-gray-500 dark:text-gray-400 font-medium">Đơn</span></h2>
+                    
+                    <div class="flex items-center gap-2">
+                        {% if booking_growth >= 0 %}
+                            <span class="bg-emerald-100 dark:bg-gray-700 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-md text-sm font-bold flex items-center border border-emerald-200 dark:border-gray-600">
+                                <i class="bi bi-arrow-up-right mr-1"></i> +{{ booking_growth }}%
+                            </span>
+                        {% else %}
+                            <span class="bg-red-100 dark:bg-gray-700 text-red-700 dark:text-red-400 px-2.5 py-1 rounded-md text-sm font-bold flex items-center border border-red-200 dark:border-gray-600">
+                                <i class="bi bi-arrow-down-right mr-1"></i> {{ booking_growth }}%
+                            </span>
+                        {% endif %}
+                        <span class="text-sm text-gray-500 dark:text-gray-400">so với kỳ trước</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HÀNG 2: BỘ 3 CHỈ SỐ -->
+    <h6 class="font-bold text-gray-500 dark:text-gray-400 uppercase text-xs mb-4 tracking-wider"><i class="bi bi-star-fill text-yellow-500 mr-2"></i>Chỉ số vận hành chuyên sâu</h6>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-10 h-10 rounded-lg bg-cyan-50 dark:bg-gray-700 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mr-3">
+                    <i class="bi bi-tags"></i>
+                </div>
+                <h6 class="font-bold text-gray-900 dark:text-white m-0">ADR <i class="bi bi-info-circle text-gray-400 ml-1 text-sm"></i></h6>
+            </div>
+            <h3 class="text-2xl font-extrabold mb-1 text-gray-900 dark:text-white">{{ adr|floatformat:"0g"|intcomma }}đ</h3>
+            <p class="text-gray-500 dark:text-gray-400 text-sm m-0">Giá bán bình quân/đêm</p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-10 h-10 rounded-lg bg-amber-50 dark:bg-gray-700 text-amber-600 dark:text-amber-400 flex items-center justify-center mr-3">
+                    <i class="bi bi-building"></i>
+                </div>
+                <h6 class="font-bold text-gray-900 dark:text-white m-0">RevPAR <i class="bi bi-info-circle text-gray-400 ml-1 text-sm"></i></h6>
+            </div>
+            <h3 class="text-2xl font-extrabold mb-1 text-gray-900 dark:text-white">{{ revpar|floatformat:"0g"|intcomma }}đ</h3>
+            <p class="text-gray-500 dark:text-gray-400 text-sm m-0">Doanh thu / Tổng phòng sẵn có</p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-10 h-10 rounded-lg bg-purple-50 dark:bg-gray-700 text-purple-600 dark:text-purple-400 flex items-center justify-center mr-3">
+                    <i class="bi bi-moon-stars"></i>
+                </div>
+                <h6 class="font-bold text-gray-900 dark:text-white m-0">ALOS <i class="bi bi-info-circle text-gray-400 ml-1 text-sm"></i></h6>
+            </div>
+            <h3 class="text-2xl font-extrabold mb-1 text-gray-900 dark:text-white">{{ alos|floatformat:1 }} <span class="text-lg font-medium text-gray-500 dark:text-gray-400">Đêm</span></h3>
+            <p class="text-gray-500 dark:text-gray-400 text-sm m-0">Độ dài lưu trú trung bình</p>
+        </div>
+    </div>
+    <!-- HÀNG 2.5: CHỈ SỐ RỦI RO (HỦY & NO-SHOW) -->
+    <h6 class="font-bold text-gray-500 dark:text-gray-400 uppercase text-xs mb-4 tracking-wider"><i class="bi bi-exclamation-triangle-fill text-red-500 mr-2"></i>Kiểm soát rủi ro</h6>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        
+        <!-- Thẻ Tỷ lệ Hủy (Cancel Rate) -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-transform hover:-translate-y-1">
+            <div class="flex items-center mb-4">
+                <div class="w-10 h-10 rounded-lg bg-red-50 dark:bg-gray-700 text-red-600 dark:text-red-400 flex items-center justify-center mr-3">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+                <h6 class="font-bold text-gray-900 dark:text-white m-0">Tỷ lệ Hủy phòng (Cancel Rate)</h6>
+            </div>
+            <h3 class="text-2xl font-extrabold mb-1 text-gray-900 dark:text-white">{{ cancel_rate }}%</h3>
+            <p class="text-gray-500 dark:text-gray-400 text-sm m-0">
+                Có <strong class="text-red-500 dark:text-red-400">{{ cancelled_orders }}</strong> đơn bị hủy trên tổng số {{ total_orders }} đơn
+            </p>
+        </div>
+
+        <!-- Thẻ Tỷ lệ No-Show -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-transform hover:-translate-y-1">
+            <div class="flex items-center mb-4">
+                <div class="w-10 h-10 rounded-lg bg-orange-50 dark:bg-gray-700 text-orange-600 dark:text-orange-400 flex items-center justify-center mr-3">
+                    <i class="bi bi-person-x"></i>
+                </div>
+                <h6 class="font-bold text-gray-900 dark:text-white m-0">Tỷ lệ Vắng mặt (No-Show Rate)</h6>
+            </div>
+            <h3 class="text-2xl font-extrabold mb-1 text-gray-900 dark:text-white">{{ noshow_rate }}%</h3>
+            <p class="text-gray-500 dark:text-gray-400 text-sm m-0">
+                Có <strong class="text-orange-500 dark:text-orange-400">{{ noshow_orders }}</strong> đơn quá hạn trên tổng số {{ total_orders }} đơn
+            </p>
+        </div>
+        
+    </div>
+    <!-- HÀNG 3: BIỂU ĐỒ (CHARTS) -->
+    <h6 class="font-bold text-gray-500 dark:text-gray-400 uppercase text-xs mb-4 tracking-wider"><i class="bi bi-pie-chart-fill text-blue-500 mr-2"></i>Trực quan hóa Dữ liệu</h6>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h6 class="font-bold text-gray-800 dark:text-white mb-6 uppercase text-sm">Biến động dòng tiền (VNPay)</h6>
+            <div class="relative w-full h-72">
+                <canvas id="revenueLineChart"></canvas>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h6 class="font-bold text-gray-800 dark:text-white mb-6 uppercase text-sm">Cơ cấu doanh thu theo loại phòng</h6>
+            <div class="relative w-full h-72 flex justify-center">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- HÀNG 4: DATA TABLES -->
+    <h6 class="font-bold text-gray-500 dark:text-gray-400 uppercase text-xs mb-4 tracking-wider"><i class="bi bi-table text-emerald-500 mr-2"></i>Chi tiết Dữ liệu</h6>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        
+        <!-- BẢNG 1: TOP PHÒNG ĐÃ FIX TƯƠNG PHẢN -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <h6 class="font-bold text-gray-800 dark:text-white mb-0 uppercase text-sm">TOP PHÒNG ĐẮT KHÁCH</h6>
+            </div>
+            <ul class="divide-y divide-gray-200 dark:divide-gray-700 m-0 p-0">
+                {% for room in top_rooms %}
+                <li class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    <div class="flex items-center gap-4">
+                        <!-- SỬA LẠI VÒNG TRÒN VÀ CHỮ Ở ĐÂY -->
+                        <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold shadow-sm">
+                            {{ forloop.counter }}
+                        </div>
+                        <div>
+                            <div class="font-bold text-gray-900 dark:text-white text-sm">Phòng {{ room.room__room_number }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ room.room__category__name }}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <!-- SỬA LẠI MÀU TIỀN Ở ĐÂY -->
+                        <div class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">{{ room.total_revenue|floatformat:"0g"|intcomma }}đ</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ room.booking_count }} lượt đặt</div>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="px-6 py-6 text-center text-sm text-gray-500 dark:text-gray-400">Chưa có dữ liệu.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- BẢNG 2: CÔNG NỢ -->
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex justify-between items-center">
+                <h6 class="font-bold text-gray-800 dark:text-white mb-0 uppercase text-sm">CÔNG NỢ CẦN THU NỐT</h6>
+                <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 text-xs font-bold px-3 py-1.5 rounded-md shadow-sm border border-red-200 dark:border-red-800">
+                    Tổng Nợ: {{ total_outstanding_debt|floatformat:"0g"|intcomma }}đ
+                </span>
+            </div>
+            <div class="overflow-x-auto w-full">
+                <table class="w-full divide-y divide-gray-200 dark:divide-gray-700" style="table-layout: fixed;">
+                    <thead class="bg-transparent">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 40%;">Khách Hàng</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 35%;">Phòng & Lịch Trình</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 25%;">Còn Nợ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-transparent">
+                        {% for b in debt_bookings %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center text-gray-500 dark:text-gray-400 shadow-sm flex-shrink-0">
+                                        <i class="bi bi-person-fill text-lg"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="font-bold text-gray-900 dark:text-white text-sm truncate">{{ b.guest_full_name|default:b.user.username }}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1"><i class="bi bi-telephone-fill mr-1"></i>{{ b.guest_phone|default:"-" }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-400 px-2 py-1.5 rounded-md text-xs font-bold border border-blue-100 dark:border-blue-800 inline-block">
+                                    Phòng {{ b.room.room_number }}
+                                </span>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
+                                    <i class="bi bi-calendar-event mr-1"></i> {{ b.check_in|date:"d/m/Y" }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <span class="font-bold text-red-600 dark:text-red-400 text-sm">{{ b.remaining_balance|floatformat:"0g"|intcomma }}đ</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="px-6 py-10 text-center">
+                                <i class="bi bi-check-circle text-emerald-500 dark:text-emerald-400 text-4xl mb-3 block"></i>
+                                <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">Tuyệt vời! Không có đơn hàng nào nợ tiền.</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    (function() {
+        const htmlElement = document.documentElement;
+
+        function updateChartColors(isDark) {
+            const textColor = isDark ? '#d1d5db' : '#6b7280'; 
+            const gridColor = isDark ? '#374151' : '#f3f4f6'; 
+            const tooltipBg = isDark ? '#1f2937' : '#ffffff'; 
+            const tooltipText = isDark ? '#f9fafb' : '#111827';
+            const lineFill = isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)';
+            const pieBorder = isDark ? '#1f2937' : '#ffffff';
+
+            Chart.defaults.color = textColor;
+            Chart.defaults.font.family = 'inherit';
+
+            if(window.revenueChart) {
+                window.revenueChart.data.datasets[0].backgroundColor = lineFill;
+                window.revenueChart.options.scales.x.grid.color = gridColor;
+                window.revenueChart.options.scales.y.grid.color = gridColor;
+                window.revenueChart.options.plugins.tooltip.backgroundColor = tooltipBg;
+                window.revenueChart.options.plugins.tooltip.titleColor = tooltipText;
+                window.revenueChart.options.plugins.tooltip.bodyColor = textColor;
+                window.revenueChart.options.plugins.tooltip.borderColor = gridColor;
+                window.revenueChart.update();
+            }
+
+            if(window.categoryChart) {
+                window.categoryChart.data.datasets[0].borderColor = pieBorder;
+                window.categoryChart.options.plugins.tooltip.backgroundColor = tooltipBg;
+                window.categoryChart.options.plugins.tooltip.titleColor = tooltipText;
+                window.categoryChart.options.plugins.tooltip.bodyColor = textColor;
+                window.categoryChart.options.plugins.tooltip.borderColor = gridColor;
+                window.categoryChart.update();
+            }
+        }
+
+        const dateLabels = [{% for r in revenue_by_date %}"{{ r.date|date:'d/m' }}",{% endfor %}];
+        const dateData = [{% for r in revenue_by_date %}parseFloat("{{ r.daily_revenue|default:0 }}".replace(/,/g, '')),{% endfor %}];
+
+        window.revenueChart = new Chart(document.getElementById('revenueLineChart'), {
+            type: 'line',
+            data: {
+                labels: dateLabels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: dateData,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3, fill: true, tension: 0.4,
+                    pointBackgroundColor: '#3b82f6', pointBorderColor: '#fff',
+                    pointBorderWidth: 2, pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { borderWidth: 1 } },
+                scales: { 
+                    y: { beginAtZero: true, border: {display: false} },
+                    x: { border: {display: false}, grid: { display: false } }
+                }
+            }
+        });
+
+        const catLabels = [{% for c in revenue_by_category %}"{{ c.room__category__name }}",{% endfor %}];
+        const catData = [{% for c in revenue_by_category %}parseFloat("{{ c.total_revenue|default:0 }}".replace(/,/g, '')),{% endfor %}];
+
+        window.categoryChart = new Chart(document.getElementById('categoryChart'), {
+            type: 'doughnut',
+            data: {
+                labels: catLabels,
+                datasets: [{
+                    data: catData,
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '70%',
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, padding: 20 } }, tooltip: { borderWidth: 1 } }
+            }
+        });
+
+        updateChartColors(htmlElement.classList.contains('dark'));
+
+        const observer = new MutationObserver(() => {
+            updateChartColors(htmlElement.classList.contains('dark'));
+        });
+        observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
+    })();
+</script>
+{% endblock %}

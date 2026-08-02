@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .msg-layout { min-height: calc(100vh - 280px); }
+    .msg-sidebar {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+    .msg-sidebar-header {
+        background: linear-gradient(135deg, #05203c, #1a3a5f);
+        color: white;
+        padding: 1.25rem;
+    }
+    .conv-item {
+        display: block;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #f0f0f0;
+        text-decoration: none;
+        color: inherit;
+        transition: background 0.15s;
+    }
+    .conv-item:hover { background: #f8fafc; color: inherit; }
+    .conv-item.active { background: #eef4ff; border-left: 3px solid #05203c; }
+    .conv-preview { font-size: 0.85rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .unread-badge { background: #ef4444; color: white; font-size: 0.7rem; min-width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+    .chat-panel {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        display: flex;
+        flex-direction: column;
+        min-height: 500px;
+    }
+    .chat-header { padding: 1rem 1.5rem; border-bottom: 1px solid #eee; }
+    .chat-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        background: #f8fafc;
+        max-height: 450px;
+    }
+    .chat-footer { padding: 1rem 1.5rem; border-top: 1px solid #eee; }
+    .bubble {
+        max-width: 75%;
+        padding: 0.75rem 1rem;
+        border-radius: 16px;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        word-wrap: break-word;
+    }
+    .bubble-mine {
+        background: #05203c;
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 4px;
+    }
+    .bubble-theirs {
+        background: white;
+        color: #1e293b;
+        border: 1px solid #e2e8f0;
+        border-bottom-left-radius: 4px;
+    }
+    .bubble-time { font-size: 0.7rem; opacity: 0.7; margin-top: 0.25rem; }
+    .bubble-sender { font-size: 0.75rem; font-weight: 600; margin-bottom: 0.25rem; opacity: 0.85; }
+    .empty-chat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        min-height: 400px;
+        color: #94a3b8;
+    }
+</style>
+
+<div class="msg-layout">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0" style="color: #05203c;">
+            <i class="bi bi-chat-dots-fill me-2 text-primary"></i> Trung tâm tin nhắn
+        </h3>
+        <a href="{% url 'new_conversation' %}" class="btn btn-primary rounded-pill fw-bold px-4">
+            <i class="bi bi-plus-lg me-1"></i> Tin nhắn mới
+        </a>
+    </div>
+
+    <div class="row g-3">
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="msg-sidebar">
+                <div class="msg-sidebar-header">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-inbox me-2"></i> Hộp thư của bạn</h6>
+                    <small class="opacity-75">{{ conversations.count }} cuộc hội thoại</small>
+                </div>
+                <div style="max-height: 520px; overflow-y: auto;">
+                    {% for conv in conversations %}
+                    <a href="{% url 'message_thread' conv.id %}"
+                       class="conv-item {% if active_conversation %}{% if active_conversation.id == conv.id %}active{% endif %}{% elif active_id == conv.id %}active{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1" style="min-width: 0;">
+                                <div class="fw-bold text-dark text-truncate">{{ conv.subject }}</div>
+                                {% if conv.booking %}
+                                <small class="text-primary"><i class="bi bi-door-open me-1"></i>Phòng {{ conv.booking.room.room_number }}</small>
+                                {% endif %}
+                                {% if conv.last_message %}
+                                <div class="conv-preview mt-1">
+                                    {% if conv.last_message.sender.is_staff %}<i class="bi bi-building me-1"></i>{% endif %}
+                                    {{ conv.last_message.content|truncatechars:60 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="text-end ms-2 flex-shrink-0">
+                                {% if conv.unread_count %}
+                                <span class="unread-badge">{{ conv.unread_count }}</span>
+                                {% endif %}
+                                <div class="small text-muted mt-1">{{ conv.updated_at|date:"d/m H:i" }}</div>
+                            </div>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="text-center py-5 px-3">
+                        <i class="bi bi-chat-square-text fs-1 text-muted"></i>
+                        <p class="text-muted mt-2 mb-3">Chưa có tin nhắn nào</p>
+                        <a href="{% url 'new_conversation' %}" class="btn btn-outline-primary btn-sm rounded-pill">Liên hệ khách sạn</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat panel -->
+        <div class="col-lg-8">
+            <div class="chat-panel">
+                {% if active_conversation %}
+                    {% include 'booking/messages/_thread_panel.html' %}
+                {% else %}
+                <div class="empty-chat">
+                    <i class="bi bi-chat-heart fs-1 mb-3"></i>
+                    <h5 class="fw-bold">Chọn cuộc hội thoại</h5>
+                    <p class="small">Chọn một cuộc hội thoại bên trái hoặc tạo tin nhắn mới</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

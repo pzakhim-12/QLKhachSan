@@ -1,0 +1,41 @@
+{% extends "unfold/layouts/base.html" %}
+
+{% block content %}
+<div class="px-4 lg:px-8 py-6 w-full max-w-4xl mx-auto">
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-6">
+        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            {{ title }}
+        </h1>
+        
+        <form action="" method="post">
+            {% csrf_token %}
+            
+            <div class="mb-6">
+                {% for field in form %}
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ field.help_text }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <input type="hidden" name="action" value="bulk_create_rooms" />
+            <input type="hidden" name="_selected_action" value="{{ queryset.first.pk }}" />
+            
+            <div class="flex gap-4 border-t border-gray-200 dark:border-gray-700 pt-6">
+                <button type="submit" name="apply" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-md transition-colors">
+                    Xác nhận tạo
+                </button>
+                <a href="javascript:history.back()" class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 font-semibold py-2 px-6 rounded-md transition-colors">
+                    Hủy
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

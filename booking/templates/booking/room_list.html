@@ -2,76 +2,498 @@
 
 {% block content %}
 <style>
-    .filter-panel {
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(5, 32, 60, 0.06);
-        border: 1px solid rgba(5, 32, 60, 0.06);
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap');
+
+    .lux-room-list {
+        --ink: #05203c;
+        --ink-soft: #0e3a63;
+        --gold: #b8905a;
+        --gold-deep: #93703f;
+        --gold-soft: #ecdfc4;
+        --ivory: #faf7f1;
+        --line: #e6ddc8;
+        --stone: #6b6459;
+        --stone-light: #a39c8c;
+        font-family: 'Inter', sans-serif;
+        color: var(--ink);
     }
-    .filter-panel .form-label {
+    .lux-room-list .lux-serif { font-family: 'Playfair Display', serif; }
+    .lux-room-list .lux-serif,
+    .lux-title,
+    .lux-h-title,
+    .lux-price,
+    .lux-h-price,
+    .lux-h-old-price {
+        font-variant-numeric: lining-nums;
+        font-feature-settings: "lnum" 1, "pnum" 1;
+    }
+    .lux-room-list a { text-decoration: none; }
+    .lux-room-list a:hover { text-decoration: none; }
+
+    /* ---------- Page header ---------- */
+    .lux-eyebrow {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold-deep);
+        margin-bottom: 0.6rem;
+    }
+    .lux-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 600;
+        font-size: clamp(1.6rem, 2.4vw, 2.15rem);
+        color: var(--ink);
+        margin-bottom: 0;
+    }
+    .lux-divider {
+        width: 64px;
+        height: 1px;
+        background: var(--gold);
+        position: relative;
+        margin: 0.9rem 0 0.75rem;
+    }
+    .lux-divider::after {
+        content: "";
+        position: absolute;
+        left: 28px;
+        top: -3px;
+        width: 7px;
+        height: 7px;
+        background: var(--gold);
+        transform: rotate(45deg);
+    }
+    .lux-subtitle { color: var(--stone); font-size: 0.92rem; }
+    .lux-count {
+        font-size: 0.76rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--stone);
+        font-weight: 600;
+        border: 1px solid var(--line);
+        padding: 0.55rem 1.1rem;
+        border-radius: 2px;
+        background: #fff;
+        white-space: nowrap;
+    }
+
+    /* ---------- Horizontal filter bar (redesigned) ---------- */
+    .lux-filter-bar {
+        background: linear-gradient(180deg, #ffffff 0%, var(--ivory) 100%);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 1.9rem 2rem 1.7rem;
+        box-shadow: 0 18px 40px rgba(5, 32, 60, 0.08);
+        position: relative;
+        overflow: hidden;
+    }
+    .lux-filter-bar::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 4px;
+        background: linear-gradient(90deg, var(--gold) 0%, var(--gold-soft) 50%, var(--gold) 100%);
+    }
+    .lux-filter-bar h6 {
+        font-size: 1.02rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+    .lux-filter-bar h6 i {
+        color: var(--gold-deep);
+        background: var(--gold-soft);
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin-right: 0.4rem;
+        font-size: 0.85rem;
+    }
+    .lux-clear {
+        color: var(--gold-deep) !important;
+        font-size: 0.76rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .lux-clear:hover { color: var(--ink) !important; }
+    .lux-filter-bar .form-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-bottom: 0.4rem;
+    }
+    .lux-filter-bar .form-label i { color: var(--gold-deep); font-size: 0.82rem; }
+    .lux-input-group {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .lux-input-group:focus-within {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 0.15rem rgba(184, 144, 90, 0.18);
+    }
+    .lux-input-group .lux-input-icon {
+        width: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gold-deep);
+        font-size: 0.88rem;
+        background: var(--ivory);
+        align-self: stretch;
+        border-right: 1px solid var(--line);
+    }
+    .lux-filter-bar .form-control,
+    .lux-filter-bar .form-select {
+        border: none;
+        font-size: 0.86rem;
+        background: transparent;
+        padding: 0.6rem 0.75rem;
+        box-shadow: none !important;
+    }
+    .lux-filter-bar .form-control:focus,
+    .lux-filter-bar .form-select:focus {
+        outline: none;
+        box-shadow: none;
+    }
+    .lux-price-range {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .lux-price-range .lux-input-group { flex: 1; }
+    .lux-price-range .lux-sep { color: var(--stone-light); font-size: 0.8rem; }
+
+    .lux-filter-submit-row {
+        border-top: 1px dashed var(--line);
+    }
+    .btn-lux-apply {
+        background: var(--ink);
+        color: var(--gold-soft);
+        border: 1px solid var(--ink);
+        border-radius: 50px;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+        letter-spacing: 0.12em;
+        font-weight: 700;
+        padding: 0.7rem 2.6rem;
+        transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.2s ease;
+    }
+    .btn-lux-apply:hover {
+        background: var(--gold-deep);
+        border-color: var(--gold-deep);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    /* ---------- Active filter badges ---------- */
+    .filter-badge {
+        background: #fff;
+        color: var(--ink);
+        border: 1px solid var(--gold-soft);
+        font-size: 0.76rem;
+        font-weight: 600;
+        border-radius: 50px;
+        padding: 0.4rem 0.9rem;
+    }
+    .filter-badge i { color: var(--gold-deep); }
+
+    /* ---------- Room cards: horizontal, 2 per row ---------- */
+    .lux-h-card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+    }
+    .lux-h-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 22px 44px rgba(5, 32, 60, 0.14);
+    }
+    .lux-h-media {
+        position: relative;
+        flex: 0 0 auto;
+        width: 100%;
+        overflow: hidden;
+        background: var(--ink);
+    }
+    .lux-h-media img {
+        width: 100%;
+        height: 260px;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.6s ease, filter 0.4s ease;
+    }
+    .lux-h-card:hover .lux-h-media img { transform: scale(1.06); }
+    .lux-h-media.is-sold img { filter: grayscale(55%) brightness(0.85); }
+    .lux-h-ribbon {
+        position: absolute;
+        top: 16px;
+        left: -34px;
+        background: var(--ink);
+        color: var(--gold-soft);
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 0.28rem 2.4rem;
+        transform: rotate(-40deg);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        z-index: 3;
+    }
+
+    .lux-h-body {
+        flex: 1;
+        padding: 1.35rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+    }
+    .lux-h-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.35rem;
+    }
+    .lux-h-badge {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--gold-deep);
+    }
+    .lux-h-rating {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        white-space: nowrap;
+        font-size: 0.8rem;
+        color: var(--stone);
+    }
+    .lux-h-rating .bi-star-fill,
+    .lux-h-rating .bi-star-half { color: var(--gold); }
+    .lux-h-rating .bi-star { color: var(--line); }
+
+    .lux-h-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.28rem;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 0.45rem;
+    }
+    .lux-h-desc {
+        color: var(--stone);
+        font-size: 0.86rem;
+        line-height: 1.55;
+        margin-bottom: 0.85rem;
+    }
+    .lux-h-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem 1.1rem;
+        font-size: 0.78rem;
+        color: var(--stone);
+        margin-bottom: 0.85rem;
+    }
+    .lux-h-meta span { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .lux-h-meta i { color: var(--gold-deep); }
+
+    .lux-h-amenities {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.1rem;
+        padding-top: 0.75rem;
+        margin-bottom: auto;
+        border-top: 1px dashed var(--line);
+        font-size: 0.78rem;
+        color: var(--ink-soft);
+    }
+    .lux-h-amenities span { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .lux-h-amenities i { color: var(--gold-deep); }
+
+    .lux-h-footer {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--line);
+    }
+    .lux-h-price-block { display: flex; flex-direction: column; }
+    .lux-h-old-price {
+        font-size: 0.76rem;
+        color: var(--stone-light);
+        text-decoration: line-through;
+    }
+    .lux-h-price {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--gold-deep);
+        line-height: 1.2;
+    }
+    .lux-h-price small {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.68rem;
+        color: var(--stone);
+        font-weight: 500;
+        margin-left: 0.15rem;
+    }
+    .lux-h-total {
+        font-size: 0.72rem;
+        color: var(--stone);
+        margin-top: 0.15rem;
+    }
+    .lux-h-total strong { color: var(--ink); }
+
+    .lux-h-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+    .btn-lux-outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        background: var(--ink);
+        color: var(--gold-soft);
+        border: 1px solid var(--ink);
+        border-radius: 50px;
+        padding: 0.6rem 1.4rem;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        text-decoration: none !important;
+        transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.2s ease;
+    }
+    .btn-lux-outline:hover {
+        background: var(--gold-deep);
+        border-color: var(--gold-deep);
+        color: #fff;
+        transform: translateY(-2px);
+        text-decoration: none !important;
+    }
+
+    .btn-lux-sold {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        background: var(--ivory);
+        color: var(--stone);
+        border: 1px solid var(--line);
+        border-radius: 50px;
+        padding: 0.6rem 1.4rem;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .btn-lux-ghost {
+        display: inline-block;
+        background: #fff;
+        color: var(--ink);
+        border: 1px solid var(--ink);
+        border-radius: 2px;
+        padding: 0.65rem 1.8rem;
         font-size: 0.8rem;
         font-weight: 700;
-        color: #05203c;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        letter-spacing: 0.03em;
+        text-decoration: none !important;
+        transition: background 0.25s ease, color 0.25s ease;
     }
-    .filter-panel .form-control,
-    .filter-panel .form-select {
-        border-radius: 10px;
-        border-color: #e2e8f0;
-        font-size: 0.9rem;
+    .btn-lux-ghost:hover { background: var(--ink); color: var(--gold-soft); text-decoration: none !important; }
+
+    /* ---------- Favorite button ---------- */
+    .favorite-btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.5);
+        background: rgba(255,255,255,0.92);
+        color: var(--ink);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .filter-panel .form-control:focus,
-    .filter-panel .form-select:focus {
-        border-color: #05203c;
-        box-shadow: 0 0 0 0.2rem rgba(5, 32, 60, 0.12);
+    .favorite-btn:hover { transform: scale(1.08); box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    .favorite-form { line-height: 1; }
+
+    /* ---------- Empty state ---------- */
+    .lux-empty {
+        padding: 4rem 1rem;
+        text-align: center;
+        background: var(--ivory);
+        border: 1px dashed var(--line);
+        border-radius: 6px;
     }
-    .filter-badge {
-        background: #eef2f7;
-        color: #05203c;
-        font-size: 0.8rem;
-        font-weight: 600;
-        border-radius: 50rem;
-        padding: 0.35rem 0.85rem;
+    .lux-empty i { color: var(--gold); opacity: 0.6; }
+    .lux-empty p { color: var(--stone); }
+
+    /* ---------- Accessibility ---------- */
+    .btn-lux-apply:focus-visible,
+    .btn-lux-outline:focus-visible,
+    .btn-lux-solid:focus-visible,
+    .btn-lux-ghost:focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 2px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .lux-h-card, .lux-h-media img, .favorite-btn { transition: none !important; }
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 767.98px) {
+        .lux-h-media img { height: 210px; }
     }
 </style>
 
-<div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <div>
-            <h2 class="fw-bold mb-1">
-                {% if has_active_filters %}
-                    Kết quả lọc phòng
-                {% else %}
-                    Danh sách phòng trống
-                {% endif %}
-            </h2>
+
+<div class="container my-5 lux-room-list">
+
+    <div class="lux-filter-bar mb-5">
+        <form method="GET" action="{% url 'room_list' %}">
             {% if query %}
-                <p class="text-secondary mb-0">
-                    Từ khóa: <strong>"{{ query }}"</strong>
-                </p>
+                <input type="hidden" name="q" value="{{ query }}">
             {% endif %}
-        </div>
-        <span class="text-secondary">{{ rooms.count }} phòng{% if has_active_filters %} phù hợp{% else %} khả dụng{% endif %}</span>
-    </div>
 
-    <div class="row g-4">
-        <div class="col-lg-3">
-            <div class="filter-panel p-4 sticky-top" style="top: 1rem;">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <h6 class="fw-bold mb-0"><i class="bi bi-funnel me-2"></i>Bộ lọc</h6>
-                    {% if has_active_filters %}
-                        <a href="{% url 'room_list' %}" class="small text-decoration-none fw-semibold">Xóa tất cả</a>
-                    {% endif %}
-                </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+                <h6 class="lux-serif mb-0"><i class="bi bi-sliders"></i>Tinh chỉnh tìm kiếm</h6>
+                {% if has_active_filters %}
+                    <a href="{% url 'room_list' %}" class="lux-clear text-decoration-none"><i class="bi bi-x-circle"></i> Xóa tất cả</a>
+                {% endif %}
+            </div>
 
-                <form method="GET" action="{% url 'room_list' %}">
-                    {% if query %}
-                        <input type="hidden" name="q" value="{{ query }}">
-                    {% endif %}
-
-                    <div class="mb-3">
-                        <label class="form-label" for="filter-category">Loại phòng</label>
+            <div class="row g-3 align-items-end">
+                <div class="col-6 col-md-4 col-lg-2">
+                    <label class="form-label" for="filter-category"><i class="bi bi-door-open"></i>Loại phòng</label>
+                    <div class="lux-input-group">
+                        <span class="lux-input-icon"><i class="bi bi-grid"></i></span>
                         <select name="category" id="filter-category" class="form-select">
                             <option value="">Tất cả loại phòng</option>
                             {% for cat in categories %}
@@ -81,21 +503,27 @@
                             {% endfor %}
                         </select>
                     </div>
+                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Khoảng giá / đêm (VNĐ)</label>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <input type="number" name="min_price" class="form-control" placeholder="Từ" min="0" step="1000" value="{{ filters.min_price }}">
-                            </div>
-                            <div class="col-6">
-                                <input type="number" name="max_price" class="form-control" placeholder="Đến" min="0" step="1000" value="{{ filters.max_price }}">
-                            </div>
+                <div class="col-12 col-md-8 col-lg-4">
+                    <label class="form-label"><i class="bi bi-cash-coin"></i>Khoảng giá (VNĐ)</label>
+                    <div class="lux-price-range">
+                        <div class="lux-input-group">
+                            <span class="lux-input-icon"><i class="bi bi-arrow-down-short"></i></span>
+                            <input type="number" name="min_price" id="filter-min-price" class="form-control" placeholder="Từ" min="0" step="1000" value="{{ filters.min_price }}">
+                        </div>
+                        <span class="lux-sep">—</span>
+                        <div class="lux-input-group">
+                            <span class="lux-input-icon"><i class="bi bi-arrow-up-short"></i></span>
+                            <input type="number" name="max_price" id="filter-max-price" class="form-control" placeholder="Đến" min="0" step="1000" value="{{ filters.max_price }}">
                         </div>
                     </div>
+                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label" for="filter-capacity">Sức chứa tối thiểu</label>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <label class="form-label" for="filter-capacity"><i class="bi bi-people"></i>Sức chứa</label>
+                    <div class="lux-input-group">
+                        <span class="lux-input-icon"><i class="bi bi-person"></i></span>
                         <select name="capacity" id="filter-capacity" class="form-select">
                             <option value="">Bất kỳ</option>
                             <option value="1" {% if filters.capacity == "1" %}selected{% endif %}>1+ người</option>
@@ -104,128 +532,216 @@
                             <option value="4" {% if filters.capacity == "4" %}selected{% endif %}>4+ người</option>
                         </select>
                     </div>
+                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label" for="filter-availability">Trạng thái</label>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <label class="form-label" for="filter-availability"><i class="bi bi-check2-circle"></i>Trạng thái</label>
+                    <div class="lux-input-group">
+                        <span class="lux-input-icon"><i class="bi bi-toggle-on"></i></span>
                         <select name="availability" id="filter-availability" class="form-select">
                             <option value="">Tất cả</option>
                             <option value="available" {% if filters.availability == "available" %}selected{% endif %}>Còn phòng</option>
                             <option value="unavailable" {% if filters.availability == "unavailable" %}selected{% endif %}>Đã hết phòng</option>
                         </select>
                     </div>
+                </div>
 
-                    <div class="mb-4">
-                        <label class="form-label" for="filter-sort">Sắp xếp</label>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <label class="form-label" for="filter-sort"><i class="bi bi-sort-down"></i>Sắp xếp</label>
+                    <div class="lux-input-group">
+                        <span class="lux-input-icon"><i class="bi bi-funnel"></i></span>
                         <select name="sort" id="filter-sort" class="form-select">
-                            <option value="">Mặc định (số phòng)</option>
+                            <option value="">Mặc định</option>
                             <option value="price_asc" {% if filters.sort == "price_asc" %}selected{% endif %}>Giá tăng dần</option>
                             <option value="price_desc" {% if filters.sort == "price_desc" %}selected{% endif %}>Giá giảm dần</option>
                         </select>
                     </div>
-
-                    <button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill">
-                        <i class="bi bi-sliders me-1"></i> Áp dụng bộ lọc
-                    </button>
-                </form>
+                </div>
             </div>
-        </div>
 
-        <div class="col-lg-9">
-            {% if has_active_filters %}
-            <div class="d-flex flex-wrap gap-2 mb-4">
-                {% if query %}
-                    <span class="filter-badge"><i class="bi bi-search me-1"></i> "{{ query }}"</span>
-                {% endif %}
-                {% if filters.category %}
-                    {% for cat in categories %}
-                        {% if filters.category == cat.id|stringformat:"s" %}
-                            <span class="filter-badge"><i class="bi bi-door-open me-1"></i> {{ cat.name }}</span>
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
-                {% if filters.min_price or filters.max_price %}
-                    <span class="filter-badge">
-                        <i class="bi bi-cash me-1"></i>
-                        {% if filters.min_price and filters.max_price %}
-                            {{ filters.min_price|floatformat:0 }} – {{ filters.max_price|floatformat:0 }} VNĐ
-                        {% elif filters.min_price %}
-                            Từ {{ filters.min_price|floatformat:0 }} VNĐ
-                        {% else %}
-                            Đến {{ filters.max_price|floatformat:0 }} VNĐ
-                        {% endif %}
-                    </span>
-                {% endif %}
-                {% if filters.capacity %}
-                    <span class="filter-badge"><i class="bi bi-people me-1"></i> {{ filters.capacity }}+ người</span>
-                {% endif %}
-                {% if filters.availability == "available" %}
-                    <span class="filter-badge"><i class="bi bi-check-circle me-1"></i> Còn phòng</span>
-                {% elif filters.availability == "unavailable" %}
-                    <span class="filter-badge"><i class="bi bi-x-circle me-1"></i> Hết phòng</span>
-                {% endif %}
-                {% if filters.sort == "price_asc" %}
-                    <span class="filter-badge"><i class="bi bi-sort-numeric-down me-1"></i> Giá tăng dần</span>
-                {% elif filters.sort == "price_desc" %}
-                    <span class="filter-badge"><i class="bi bi-sort-numeric-up me-1"></i> Giá giảm dần</span>
-                {% endif %}
+            <div class="text-center mt-4 pt-3 lux-filter-submit-row">
+                <button type="submit" class="btn btn-lux-apply">
+                    <i class="bi bi-search me-1"></i> Áp dụng bộ lọc
+                </button>
             </div>
+        </form>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
+        <div>
+            <span class="lux-eyebrow">Bộ sưu tập phòng nghỉ</span>
+            <h2 class="lux-title">
+                {% if has_active_filters %}
+                    Kết quả lọc phòng
+                {% else %}
+                    Danh sách phòng trống
+                {% endif %}
+            </h2>
+            <div class="lux-divider"></div>
+            {% if query %}
+                <p class="lux-subtitle mb-0">
+                    Từ khóa: <strong>"{{ query }}"</strong>
+                </p>
             {% endif %}
+        </div>
+        <span class="lux-count">{{ rooms.count }} phòng{% if has_active_filters %} phù hợp{% else %} khả dụng{% endif %}</span>
+    </div>
 
-            <div class="row g-4">
-                {% for room in rooms %}
-                <div class="col-md-6 col-xl-4">
-                    <div class="card h-100 shadow-sm border-0">
-                        {% if room.image %}
-                            <img src="{{ room.image.url }}" alt="Phòng {{ room.room_number }}" class="card-img-top" style="height: 200px; object-fit: cover; border-radius: 10px 10px 0 0;">
-                        {% else %}
-                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px; border-radius: 10px 10px 0 0;">
-                                <i class="bi bi-image fs-1 opacity-50"></i>
-                            </div>
-                        {% endif %}
+    {% if has_active_filters %}
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        {% if query %}
+            <span class="filter-badge"><i class="bi bi-search me-1"></i> "{{ query }}"</span>
+        {% endif %}
+        {% if filters.category %}
+            {% for cat in categories %}
+                {% if filters.category == cat.id|stringformat:"s" %}
+                    <span class="filter-badge"><i class="bi bi-door-open me-1"></i> {{ cat.name }}</span>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        {% if filters.min_price or filters.max_price %}
+            <span class="filter-badge">
+                <i class="bi bi-cash me-1"></i>
+                {% if filters.min_price and filters.max_price %}
+                    {{ filters.min_price|floatformat:"0g" }} – {{ filters.max_price|floatformat:"0g" }} VNĐ
+                {% elif filters.min_price %}
+                    Từ {{ filters.min_price|floatformat:"0g" }} VNĐ
+                {% else %}
+                    Đến {{ filters.max_price|floatformat:"0g" }} VNĐ
+                {% endif %}
+            </span>
+        {% endif %}
+        {% if filters.capacity %}
+            <span class="filter-badge"><i class="bi bi-people me-1"></i> {{ filters.capacity }}+ người</span>
+        {% endif %}
+        {% if filters.availability == "available" %}
+            <span class="filter-badge"><i class="bi bi-check-circle me-1"></i> Còn phòng</span>
+        {% elif filters.availability == "unavailable" %}
+            <span class="filter-badge"><i class="bi bi-x-circle me-1"></i> Hết phòng</span>
+        {% endif %}
+        {% if filters.sort == "price_asc" %}
+            <span class="filter-badge"><i class="bi bi-sort-numeric-down me-1"></i> Giá tăng dần</span>
+        {% elif filters.sort == "price_desc" %}
+            <span class="filter-badge"><i class="bi bi-sort-numeric-up me-1"></i> Giá giảm dần</span>
+        {% endif %}
+    </div>
+    {% endif %}
 
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <span class="badge bg-info text-dark">{{ room.category.name }}</span>
-                                {% if room.is_available %}
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Còn phòng</span>
-                                {% else %}
-                                    <span class="badge bg-secondary-subtle text-secondary border">Hết phòng</span>
-                                {% endif %}
-                            </div>
-                            <h4 class="card-title fw-bold">Phòng {{ room.room_number }}</h4>
-
-                            <div class="d-flex align-items-center my-2 text-muted small">
-                                <i class="bi bi-people me-2"></i> Tối đa {{ room.category.capacity }} người
-                            </div>
-
-                            <div class="d-flex align-items-center my-3 text-muted">
-                                <i class="bi bi-tag-fill me-2"></i>
-                                <span class="fs-5 fw-bold text-primary">{{ room.category.price_per_night|floatformat:0 }} VNĐ</span> / đêm
-                            </div>
-
-                            {% if room.is_available %}
-                                <a href="{% url 'room_detail' room.id %}" class="btn btn-primary w-100 mt-3 fw-bold">Xem chi tiết</a>
-                            {% else %}
-                                <button class="btn btn-secondary w-100 mt-3 fw-bold text-uppercase" disabled>
-                                    <i class="bi bi-lock-fill"></i> Đã hết phòng
-                                </button>
-                            {% endif %}
+    <div class="row g-4">
+        {% for room in rooms %}
+        <div class="col-md-6">
+            <div class="lux-h-card h-100">
+                <div class="position-relative lux-h-media{% if not room.is_available %} is-sold{% endif %}">
+                    {% if room.image %}
+                        <img src="{{ room.image.url }}" alt="Phòng {{ room.room_number }}">
+                    {% else %}
+                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center h-100">
+                            <i class="bi bi-image fs-1 opacity-50"></i>
                         </div>
+                    {% endif %}
+                    {% if not room.is_available %}
+                        <span class="lux-h-ribbon">Hết phòng</span>
+                    {% endif %}
+                    <div class="position-absolute top-0 end-0 m-2">
+                        {% if room.id in favorite_room_ids %}
+                            {% include 'booking/includes/favorite_button.html' with room=room is_favorite=True %}
+                        {% else %}
+                            {% include 'booking/includes/favorite_button.html' with room=room is_favorite=False %}
+                        {% endif %}
                     </div>
                 </div>
-                {% empty %}
-                <div class="col-12 text-center py-5">
-                    <i class="bi bi-funnel fs-1 text-secondary opacity-50 d-block mb-3"></i>
-                    {% if has_active_filters %}
-                        <p class="text-secondary mb-2">Không có phòng nào phù hợp với bộ lọc hiện tại.</p>
-                        <a href="{% url 'room_list' %}" class="btn btn-outline-primary rounded-pill px-4">Xóa bộ lọc</a>
-                    {% else %}
-                        <p class="text-secondary">Rất tiếc, hiện tại không có phòng trống.</p>
+
+                <div class="lux-h-body">
+                    <div class="lux-h-top">
+                        <span class="lux-h-badge">{{ room.category.name }}</span>
+                        {% if room.category.rating %}
+                        <span class="lux-h-rating">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= room.category.rating %}
+                                    <i class="bi bi-star-fill"></i>
+                                {% elif forloop.counter|add:"-1" < room.category.rating %}
+                                    <i class="bi bi-star-half"></i>
+                                {% else %}
+                                    <i class="bi bi-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                            {{ room.category.rating }} ({{ room.category.review_count|default:0 }})
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <h4 class="lux-h-title">{{ room.category.name|default:"Phòng" }} {{ room.room_number }}</h4>
+
+                    {% if room.category.description %}
+                        <p class="lux-h-desc">{{ room.category.description }}</p>
                     {% endif %}
+
+                    <div class="lux-h-meta">
+                        <span><i class="bi bi-people"></i> Tối đa {{ room.category.capacity }} khách</span>
+                        {% if room.category.room_size %}
+                            <span><i class="bi bi-arrows-angle-expand"></i> {{ room.category.room_size }}m²</span>
+                        {% endif %}
+                        {% if room.category.bed_type %}
+                            <span><i class="bi bi-house-door"></i> {{ room.category.bed_type }}</span>
+                        {% endif %}
+                        {% if room.available_count %}
+                            <span><i class="bi bi-door-open"></i> {{ room.available_count }} phòng trống</span>
+                        {% endif %}
+                    </div>
+
+                    {% if room.category.amenities %}
+                    <div class="lux-h-amenities">
+                        {% for amenity in room.category.amenities %}
+                            <span><i class="bi bi-check-circle-fill"></i> {{ amenity }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="lux-h-footer">
+                        <div class="lux-h-price-block">
+                            {% if room.category.old_price %}
+                                <span class="lux-h-old-price">{{ room.category.old_price|floatformat:"0g" }}đ/đêm</span>
+                            {% endif %}
+                            <span class="lux-h-price">{{ room.category.price_per_night|floatformat:"0g" }}đ<small>/đêm</small></span>
+                            <span class="lux-h-total">Tổng 1 đêm: <strong>{{ room.category.price_per_night|floatformat:"0g" }}đ</strong></span>
+                        </div>
+
+                        <div class="lux-h-actions">
+                            {% if room.is_available %}
+                                <a href="{% url 'room_detail' room.id %}" class="btn-lux-outline"><i class="bi bi-eye"></i> Xem chi tiết</a>
+                            {% else %}
+                                <button class="btn-lux-sold" disabled>Đã hết phòng</button>
+                            {% endif %}
+                        </div>
+
+                        {% with alert=room.category.get_current_season_alert %}
+                            {% if alert %}
+                                <div style="width: 100%; text-align: center; margin-top: 8px;">
+                                    <div style="background: var(--ivory); border: 1px dashed var(--gold-deep); border-radius: 10px; padding: 0.6rem 0.8rem; display: inline-block;">
+                                        <p style="color: var(--stone); font-size: 0.75rem; font-style: italic; margin-bottom: 0; line-height: 1.4; text-align: center;">
+                                            <i class="bi bi-info-circle-fill" style="color: var(--gold-deep); margin-right: 0.3rem;"></i>{{ alert.message }}
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
                 </div>
-                {% endfor %}
             </div>
         </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="lux-empty">
+                <i class="bi bi-funnel fs-1 d-block mb-3"></i>
+                {% if has_active_filters %}
+                    <p class="mb-3">Không có phòng nào phù hợp với bộ lọc hiện tại.</p>
+                    <a href="{% url 'room_list' %}" class="btn-lux-ghost">Xóa bộ lọc</a>
+                {% else %}
+                    <p class="mb-0">Rất tiếc, hiện tại không có phòng trống.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

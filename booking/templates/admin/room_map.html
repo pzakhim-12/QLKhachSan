@@ -1,0 +1,141 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Sơ đồ trực quan | Quản trị viên{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+    .calendar-wrapper { padding: 20px; font-family: 'Inter', sans-serif; background: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    html.dark .calendar-wrapper { background: #1f2937; }
+
+    /* HEADER */
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 15px;}
+    html.dark .cal-header { border-bottom-color: #374151; }
+    .cal-title h1 { font-size: 22px; font-weight: 700; color: #111827; margin: 0; }
+    html.dark .cal-title h1 { color: #f9fafb; }
+    
+    .cal-nav { display: flex; align-items: center; gap: 15px; }
+    .cal-nav a { color: #4b5563; text-decoration: none; font-size: 14px; font-weight: 600; }
+    .cal-nav span { font-size: 16px; font-weight: 700; color: #3b82f6; }
+    html.dark .cal-nav a { color: #d1d5db; }
+
+    /* LEGEND */
+    .cal-legend { display: flex; gap: 20px; font-size: 13px; font-weight: 500; margin-bottom: 15px; color: #4b5563; }
+    html.dark .cal-legend { color: #d1d5db; }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-box { width: 14px; height: 14px; border-radius: 4px; }
+    .bg-pending { background-color: #f59e0b; }
+    .bg-confirmed { background-color: #3b82f6; }
+    .bg-checkedin { background-color: #10b981; }
+
+    /* LƯỚI GANTT CHART */
+    .table-container { width: 100%; overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 8px; }
+    html.dark .table-container { border-color: #374151; }
+
+    .timeline-table { border-collapse: collapse; width: max-content; min-width: 100%; }
+    .timeline-table th, .timeline-table td {
+        border: 1px solid #e5e7eb; padding: 0; text-align: center; height: 50px; min-width: 40px;
+    }
+    html.dark .timeline-table th, html.dark .timeline-table td { border-color: #374151; }
+    
+    .timeline-table th { background: #f9fafb; font-size: 12px; font-weight: 600; color: #6b7280; padding: 10px 0; }
+    html.dark .timeline-table th { background: #111827; color: #9ca3af; }
+
+    /* CỘT PHÒNG CỐ ĐỊNH */
+    .sticky-col {
+        position: sticky; left: 0; background: #ffffff; z-index: 2;
+        min-width: 120px; text-align: left !important; padding: 0 15px !important;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    }
+    html.dark .sticky-col { background: #1f2937; }
+    .timeline-table th.sticky-col { z-index: 3; background: #f9fafb; font-weight: 700; color: #374151; }
+    html.dark .timeline-table th.sticky-col { background: #111827; color: #d1d5db; }
+    
+    .room-name { font-size: 14px; font-weight: 700; color: #111827; display: block; }
+    html.dark .room-name { color: #f3f4f6; }
+    .room-type { font-size: 11px; color: #9ca3af; }
+
+    /* Ô TRỐNG & CUỐI TUẦN (HỒNG NHẠT) */
+    .cell-empty { background: #ffffff; }
+    .cell-weekend { background: #fff1f2; } /* Màu hồng nhạt y chang hình mẫu */
+    html.dark .cell-empty { background: #1f2937; }
+    html.dark .cell-weekend { background: #374151; }
+
+    /* THANH THỜI GIAN BOOKING */
+    .booking-bar {
+        margin: 4px; padding: 6px 8px; border-radius: 4px; color: #ffffff;
+        font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        cursor: pointer; transition: opacity 0.2s; text-align: left;
+    }
+    .booking-bar:hover { opacity: 0.9; }
+    .bar-pending { background-color: #f59e0b; }
+    .bar-confirmed { background-color: #3b82f6; }
+    .bar-checkedin { background-color: #10b981; }
+</style>
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<div class="calendar-wrapper">
+    
+    <div class="cal-header">
+        <div class="cal-title">
+            <h1>Sơ đồ trực quan đặt phòng</h1>
+        </div>
+        <div class="cal-nav">
+            <a href="?month={{ prev_month }}&year={{ prev_year }}"><i class="bi bi-chevron-left"></i> Tháng trước</a>
+            <span>Tháng {{ month }} / {{ year }}</span>
+            <a href="?month={{ next_month }}&year={{ next_year }}">Tháng sau <i class="bi bi-chevron-right"></i></a>
+        </div>
+    </div>
+
+    <div class="cal-legend">
+        <div class="legend-item"><div class="legend-box bg-pending"></div> Chờ xác nhận (Cọc)</div>
+        <div class="legend-item"><div class="legend-box bg-confirmed"></div> Đã xác nhận</div>
+        <div class="legend-item"><div class="legend-box bg-checkedin"></div> Đang lưu trú (Checked-in)</div>
+        <div class="legend-item"><div class="legend-box" style="border: 1px solid #d1d5db; background: #fff;"></div> Trống</div>
+    </div>
+
+    <div class="table-container">
+        <table class="timeline-table">
+            <thead>
+                <tr>
+                    <th class="sticky-col">PHÒNG</th>
+                    {% for day in days_in_month %}
+                        <th title="{{ day|date:'l, d/m/Y' }}">{{ day.day }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in matrix %}
+                <tr>
+                    <td class="sticky-col">
+                        <span class="room-name">{{ item.room.room_number }}</span>
+                        <span class="room-type">{{ item.room.category.name }}</span>
+                    </td>
+                    
+                    {% for cell in item.cells %}
+                        {% if cell.type == 'empty' %}
+                            <td class="{% if cell.is_weekend %}cell-weekend{% else %}cell-empty{% endif %}"></td>
+                        {% else %}
+                            <td colspan="{{ cell.colspan }}">
+                                <a href="/admin/booking/booking/{{ cell.booking.id }}/change/" style="text-decoration: none;">
+                                    <div class="booking-bar 
+                                        {% if cell.booking.status == 'PENDING' %}bar-pending
+                                        {% elif cell.booking.status == 'CONFIRMED' %}bar-confirmed
+                                        {% elif cell.booking.status == 'CHECKED_IN' %}bar-checkedin{% endif %}"
+                                        title="{{ cell.guest_name }} | {{ cell.booking.check_in|date:'d/m' }} - {{ cell.booking.check_out|date:'d/m' }}">
+                                        {{ cell.guest_name }}
+                                    </div>
+                                </a>
+                            </td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

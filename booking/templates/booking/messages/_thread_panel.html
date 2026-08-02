@@ -1,0 +1,151 @@
+<div class="chat-header d-flex justify-content-between align-items-center">
+    <div>
+        <h5 class="fw-bold mb-0">{{ active_conversation.subject }}</h5>
+        <small class="text-muted">
+            {% if is_staff_view %}
+                <i class="bi bi-person me-1"></i>Khách: <strong>{{ active_conversation.customer.username }}</strong>
+                {% if active_conversation.customer.email %} · {{ active_conversation.customer.email }}{% endif %}
+            {% else %}
+                <i class="bi bi-building me-1"></i>Zagohaven Hotel — Hỗ trợ khách hàng
+            {% endif %}
+            {% if active_conversation.booking %}
+                · <i class="bi bi-door-open me-1"></i>Đơn #{{ active_conversation.booking.id }} — Phòng {{ active_conversation.booking.room.room_number }}
+            {% endif %}
+        </small>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        {% if active_conversation.is_closed %}
+            <span class="badge bg-secondary rounded-pill"><i class="bi bi-lock me-1"></i>Đã đóng</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="chat-body" id="chatMessages">
+    {% for msg in thread_messages %}
+    <div class="d-flex flex-column {% if msg.sender == user %}align-items-end{% else %}align-items-start{% endif %}"
+         data-msg-id="{{ msg.id }}">
+        <div class="bubble {% if msg.sender == user %}bubble-mine{% else %}bubble-theirs{% endif %}">
+            {% if msg.sender != user %}
+            <div class="bubble-sender">
+                {% if msg.sender.is_staff %}
+                    <i class="bi bi-building me-1"></i>Nhân viên {{ msg.sender.username }}
+                {% else %}
+                    <i class="bi bi-person me-1"></i>{{ msg.sender.username }}
+                {% endif %}
+            </div>
+            {% endif %}
+            {{ msg.content|linebreaksbr }}
+            <div class="bubble-time">{{ msg.created_at|date:"d/m/Y H:i" }}</div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center text-muted py-4">Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!</div>
+    {% endfor %}
+</div>
+
+{% if not active_conversation.is_closed %}
+<div class="chat-footer">
+    <form method="POST" id="chatForm" action="{% url 'message_thread' active_conversation.id %}">
+        {% csrf_token %}
+        <div class="input-group">
+            <textarea name="content" id="messageInput" class="form-control rounded-start-4 border-end-0"
+                      rows="2" placeholder="Nhập tin nhắn..." required style="resize: none;"></textarea>
+            <button type="submit" class="btn btn-primary px-4 rounded-end-4 fw-bold" id="sendBtn">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </div>
+    </form>
+</div>
+{% else %}
+<div class="chat-footer text-center text-muted py-3">
+    <i class="bi bi-lock me-1"></i>Cuộc hội thoại đã được đóng. Vui lòng tạo tin nhắn mới nếu cần hỗ trợ thêm.
+</div>
+{% endif %}
+
+<script>
+(function() {
+    const chatBody = document.getElementById('chatMessages');
+    const chatForm = document.getElementById('chatForm');
+    const messageInput = document.getElementById('messageInput');
+    if (!chatBody) return;
+
+    chatBody.scrollTop = chatBody.scrollHeight;
+
+    let lastId = 0;
+    chatBody.querySelectorAll('[data-msg-id]').forEach(el => {
+        const id = parseInt(el.dataset.msgId);
+        if (id > lastId) lastId = id;
+    });
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML.replace(/\n/g, '<br>');
+    }
+
+    function appendMessage(msg) {
+        if (document.querySelector('[data-msg-id="' + msg.id + '"]')) return;
+        const isMine = msg.is_mine;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'd-flex flex-column ' + (isMine ? 'align-items-end' : 'align-items-start');
+        wrapper.dataset.msgId = msg.id;
+
+        let senderHtml = '';
+        if (!isMine) {
+            const label = msg.is_staff
+                ? '<i class="bi bi-building me-1"></i>Nhân viên ' + msg.sender
+                : '<i class="bi bi-person me-1"></i>' + msg.sender;
+            senderHtml = '<div class="bubble-sender">' + label + '</div>';
+        }
+
+        wrapper.innerHTML = '<div class="bubble ' + (isMine ? 'bubble-mine' : 'bubble-theirs') + '">'
+            + senderHtml
+            + escapeHtml(msg.content)
+            + '<div class="bubble-time">' + msg.created_at + '</div></div>';
+
+        chatBody.appendChild(wrapper);
+        chatBody.scrollTop = chatBody.scrollHeight;
+        if (msg.id > lastId) lastId = msg.id;
+    }
+
+    if (chatForm) {
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const content = messageInput.value.trim();
+            if (!content) return;
+
+            const formData = new FormData(chatForm);
+            fetch(chatForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    appendMessage(data.message);
+                    messageInput.value = '';
+                }
+            })
+            .catch(() => chatForm.submit());
+        });
+
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        });
+    }
+
+    setInterval(function() {
+        fetch('{% url "message_poll" active_conversation.id %}?last_id=' + lastId)
+            .then(r => r.json())
+            .then(data => {
+                if (data.messages) {
+                    data.messages.forEach(appendMessage);
+                }
+            });
+    }, 5000);
+})();
+</script>
