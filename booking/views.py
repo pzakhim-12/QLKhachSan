@@ -1,37 +1,37 @@
+# Thư viện chuẩn Python
 import json
-import datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from django.core.mail import send_mail
-from django.conf import settings
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.utils.http import url_has_allowed_host_and_scheme
+# Django
+from django.conf import settings
+from django.contrib import admin  # Bắt buộc phải có để Unfold chạy được
 from django.contrib import messages
-from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.views.decorators.http import require_POST, require_GET
-from django.http import JsonResponse
-from django.db.models import Q, Sum, F, ExpressionWrapper, DecimalField, Count, fields
-from django.db.models.functions import TruncMonth, TruncDate, Coalesce
-from django.conf import settings
-from django.contrib import admin  # <-- Bắt buộc phải có để Unfold chạy được
-from django.http import HttpResponse
-from .models import Payment
-from .vnpay import vnpay 
-from datetime import timedelta
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.db.models import Count, DecimalField, ExpressionWrapper, F, Q, Sum, fields
+from django.db.models.functions import Coalesce, TruncDate, TruncMonth
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_GET, require_POST
 
-# Import các model và form của app booking
-from .models import Room, Booking, UserProfile, RoomCategory, Favorite, Conversation, Message
-from .models import RatePlan, SeasonalPricing, Coupon
+# App nội bộ (booking)
 from .forms import BookingForm
 from .messaging import (
     get_customer_conversations,
     mark_messages_read,
     notify_booking_confirmed,
 )
+from .models import (
+    Booking, Conversation, Coupon, Favorite, Message, Payment,
+    RatePlan, Room, RoomCategory, SeasonalPricing, UserProfile,
+)
+from .vnpay import vnpay
 
 def _get_favorite_room_ids(user):
     if not user.is_authenticated:
@@ -431,7 +431,7 @@ def create_payment(request, booking_id):
         ipaddr = request.META.get('REMOTE_ADDR')
 
     amount = int(booking.deposit_amount * 100)
-    vnp_txn_ref = f"{booking.id}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+    vnp_txn_ref = f"{booking.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
     
     vnp = vnpay()
     vnp.requestData['vnp_Version'] = '2.1.0'
@@ -443,7 +443,7 @@ def create_payment(request, booking_id):
     vnp.requestData['vnp_OrderInfo'] = f"Thanh toan coc cho phong {booking.room.room_number}"
     vnp.requestData['vnp_OrderType'] = 'billpayment'
     vnp.requestData['vnp_Locale'] = 'vn'
-    vnp.requestData['vnp_CreateDate'] = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    vnp.requestData['vnp_CreateDate'] = datetime.now().strftime('%Y%m%d%H%M%S')
     vnp.requestData['vnp_IpAddr'] = ipaddr
     vnp.requestData['vnp_ReturnUrl'] = settings.VNPAY_RETURN_URL
 
@@ -477,7 +477,7 @@ def payment_return(request):
                     amount=int(vnp_Amount) / 100,
                     vnp_response_code=vnp_ResponseCode,
                     is_success=True,
-                    pay_date=datetime.datetime.now()
+                    pay_date=datetime.now()
                 )
                 
                 if booking.status == 'PENDING':
@@ -526,11 +526,11 @@ def auto_cancel_overdue_bookings():
             days_in_advance = (booking.check_in - booking.created_at.date()).days
             
             if days_in_advance >= 7:
-                timeout_limit = datetime.timedelta(hours=24)
+                timeout_limit = timedelta(hours=24)
             elif days_in_advance >= 3:
-                timeout_limit = datetime.timedelta(minutes=30)
+                timeout_limit = timedelta(minutes=30)
             else:
-                timeout_limit = datetime.timedelta(minutes=30) 
+                timeout_limit = timedelta(minutes=30) 
             
             if now > (booking.created_at + timeout_limit):
                 booking.status = 'EXPIRED'
@@ -702,8 +702,8 @@ def calculate_price_api(request):
         if not (room_id and check_in_str and check_out_str):
             return JsonResponse({'success': False, 'error': 'Thiếu thông tin ngày'})
 
-        check_in = datetime.datetime.strptime(check_in_str, '%Y-%m-%d').date()
-        check_out = datetime.datetime.strptime(check_out_str, '%Y-%m-%d').date()
+        check_in = datetime.strptime(check_in_str, '%Y-%m-%d').date()
+        check_out = datetime.strptime(check_out_str, '%Y-%m-%d').date()
         
         if check_out <= check_in:
             return JsonResponse({'success': False, 'error': 'Ngày không hợp lệ'})
@@ -733,7 +733,7 @@ def calculate_price_api(request):
                         season_msgs.add(f"Ưu đãi {season.name}")
                         
             total_room_price += daily_price
-            current_date += datetime.timedelta(days=1)
+            current_date += timedelta(days=1)
 
         # 2. XỬ LÝ GÓI GIÁ VÀ THÔNG BÁO GÓI GIÁ (CODE MỚI THÊM VÀO ĐÂY)
         rate_plan_msg = ""
@@ -813,8 +813,8 @@ def hotel_dashboard_reports(request):
     except ValueError:
         days = 30
         
-    current_start = today - datetime.timedelta(days=days)
-    previous_start = current_start - datetime.timedelta(days=days)
+    current_start = today - timedelta(days=days)
+    previous_start = current_start - timedelta(days=days)
 
     # 2. LẤY DỮ LIỆU KỲ HIỆN TẠI (CURRENT PERIOD)
     current_bookings = Booking.objects.filter(
@@ -827,7 +827,7 @@ def hotel_dashboard_reports(request):
         total_orders=Count('id'),
         cancelled_orders=Count('id', filter=Q(status='CANCELLED')),
         noshow_orders=Count('id', filter=Q(status='EXPIRED')), 
-        booked_nights=Coalesce(Sum(ExpressionWrapper(F('check_out') - F('check_in'), output_field=fields.DurationField())), datetime.timedelta(0))
+        booked_nights=Coalesce(Sum(ExpressionWrapper(F('check_out') - F('check_in'), output_field=fields.DurationField())), timedelta(0))
     )
     
     current_booked_nights = current_stats['booked_nights'].days if current_stats['booked_nights'] else 0
@@ -926,7 +926,7 @@ def hotel_dashboard_reports(request):
     )['total_debt']
 
     # Dự báo 30 ngày (luôn lấy 30 ngày từ thời điểm hiện tại)
-    future_30_days = today + datetime.timedelta(days=30)
+    future_30_days = today + timedelta(days=30)
     future_bookings = Booking.objects.filter(
         check_in__lte=future_30_days,
         check_out__gte=today,
@@ -986,7 +986,7 @@ def hotel_dashboard_reports(request):
     return render(request, 'dashboard/reports.html', context)
 
 import calendar
-import datetime
+
 
 @login_required(login_url='login')
 def admin_room_map_view(request) -> HttpResponse:
@@ -1012,7 +1012,7 @@ def admin_room_map_view(request) -> HttpResponse:
     next_year = year if month < 12 else year + 1
 
     _, num_days = calendar.monthrange(year, month)
-    days_in_month = [datetime.date(year, month, day) for day in range(1, num_days + 1)]
+    days_in_month = [date(year, month, day) for day in range(1, num_days + 1)]
     start_date = days_in_month[0]
     end_date = days_in_month[-1]
 
@@ -1033,7 +1033,7 @@ def admin_room_map_view(request) -> HttpResponse:
         d = 1
         
         while d <= num_days:
-            current_date = datetime.date(year, month, d)
+            current_date = date(year, month, d)
             active_booking = None
             
             # Khách check_out ngày nào thì ngày đó phòng trống đón khách mới
@@ -1043,7 +1043,7 @@ def admin_room_map_view(request) -> HttpResponse:
                     break
             
             if active_booking:
-                end_of_block = min(active_booking.check_out, end_date + datetime.timedelta(days=1))
+                end_of_block = min(active_booking.check_out, end_date + timedelta(days=1))
                 span = (end_of_block - current_date).days
                 if span < 1: span = 1
                 

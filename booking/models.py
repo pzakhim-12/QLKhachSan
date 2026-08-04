@@ -10,7 +10,7 @@ class RoomCategory(models.Model):
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2)
     capacity = models.IntegerField(default=2)
     def get_current_season_alert(self):
-        from django.utils import timezone
+        
         
         today = timezone.now().date()
         # Lọc các cấu hình giá đang bao trùm ngày hôm nay
@@ -124,9 +124,6 @@ class Booking(models.Model):
         verbose_name = "Đơn đặt phòng"
         verbose_name_plural = "Các đơn đặt phòng"
 
-    class Meta:
-        verbose_name = "Đơn đặt phòng"
-        verbose_name_plural = "Các đơn đặt phòng"
 
     def __str__(self):
         return f"{self.user.username} đặt {self.room.room_number} ({self.get_status_display()})"
@@ -274,7 +271,7 @@ class Coupon(models.Model):
     is_active = models.BooleanField(default=True)
 
     def is_valid(self):
-        from django.utils import timezone
+        
         return self.is_active and self.valid_from <= timezone.now() <= self.valid_to and self.used_count < self.usage_limit
 
     def __str__(self):
