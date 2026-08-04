@@ -12,7 +12,6 @@ from django.utils.safestring import mark_safe
 from unfold.admin import ModelAdmin, TabularInline 
 from .models import RoomCategory, Room, Booking, RoomImage, Favorite, Conversation, Message
 from .messaging import mark_messages_read
-# Import thêm các model mới ở đầu file
 from .models import RatePlan, SeasonalPricing, Coupon
 
 
