@@ -561,7 +561,7 @@ class MessageAdmin(ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
-    # Cắt ngắn nội dung tin nhắn để hiển thị gọn
+    # Cắt ngắn nội dung tin nhắn để hiển thị gọn.
     def content_preview(self, obj):
         return obj.content[:80] + ('...' if len(obj.content) > 80 else '')
     content_preview.short_description = 'Nội dung'
