@@ -54,6 +54,8 @@ class RoomCategoryAdmin(ModelAdmin):
     actions = ['bulk_create_rooms']
 
     @admin.action(description='Thêm phòng hàng loạt cho Loại phòng này')
+    
+    # Hàm thêm nhiều phòng cùng lúc cho một loại phòng được chọn.
     def bulk_create_rooms(self, request, queryset):
         category = queryset.first()
         
@@ -109,6 +111,7 @@ class RoomAdmin(ModelAdmin):
     list_filter = ('category', 'is_available', 'housekeeping_status')
     search_fields = ('room_number', 'category__name')
     
+    # Hàm cảnh báo trễ hẹn check-in.
     def canh_bao_tre_hen(self, obj):
         # Lấy ngày hôm nay
         today = timezone.now().date()
@@ -149,6 +152,7 @@ class RoomAdmin(ModelAdmin):
         
     canh_bao_tre_hen.short_description = "Kiểm soát Nhận phòng"
     
+    #Hàm tạo nút "Tạo đơn ngay"
     def thao_tac_dat_phong(self, obj):
         # Chỉ hiện nút đặt phòng nếu phòng đang trống
         if obj.is_available:
@@ -189,6 +193,7 @@ class BookingAdmin(ModelAdmin):
     list_filter = ['status', 'cancellation_requested', 'is_active', 'check_in']
     search_fields = ['user__username', 'room__room_number']
 
+    # Hàm điều chỉnh giao diện hiển thị trạng thái đơn.
     def trang_thai_don(self, obj):
         # Nếu đã hủy
         if not obj.is_active or obj.status == 'CANCELLED':
@@ -210,6 +215,7 @@ class BookingAdmin(ModelAdmin):
         return mark_safe(f'<span style="color: {color}; font-weight: bold;">{status_label}</span>')
     trang_thai_don.short_description = 'Trạng thái'
 
+    # Hàm tạo các nút thao tác nhanh (duyệt, hủy,...)
     def thao_tac_nhanh(self, obj):
         if not obj.is_active or obj.status == 'CANCELLED':
             return mark_safe('<span class="text-gray-400">-</span>')
@@ -242,6 +248,7 @@ class BookingAdmin(ModelAdmin):
         return mark_safe('<span class="text-gray-400">-</span>')
     thao_tac_nhanh.short_description = 'Thao tác'
 
+    # Hàm đăng ký thêm các đường dẫn (URLs).
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
@@ -252,6 +259,7 @@ class BookingAdmin(ModelAdmin):
         ]
         return custom_urls + urls
 
+    # Check-in nhanh
     def process_quick_check_in(self, request, booking_id):
         booking = self.get_object(request, str(booking_id))
         
@@ -281,6 +289,7 @@ class BookingAdmin(ModelAdmin):
         }
         return render(request, 'admin/booking_checkin.html', context)
 
+    # Check-out nhanh
     def process_quick_check_out(self, request, booking_id):
         booking = self.get_object(request, str(booking_id))
         if booking and booking.status == 'CHECKED_IN':
@@ -312,6 +321,7 @@ Hy vọng bạn đã có trải nghiệm tuyệt vời. Xin vui lòng để lạ
                             level=admin_messages.ERROR)
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/admin/'))
     
+    # Duyệt hủy đơn
     def process_confirm_cancel(self, request, booking_id):
         booking = self.get_object(request, str(booking_id))
         if booking and booking.cancellation_requested:
@@ -335,6 +345,8 @@ Hy vọng bạn đã có trải nghiệm tuyệt vời. Xin vui lòng để lạ
             # THÊM THÔNG BÁO LỖI Ở ĐÂY
             self.message_user(request, f"Không thể hủy! Đơn #{booking_id} không có yêu cầu hủy hoặc đã thay đổi trạng thái.", level=admin_messages.ERROR)
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/admin/'))
+    
+    # Xử lý khách không đến nhận phòng (No-Show)
     def process_mark_no_show(self, request, booking_id):
         booking = self.get_object(request, str(booking_id))
         
@@ -363,6 +375,8 @@ Hy vọng bạn đã có trải nghiệm tuyệt vời. Xin vui lòng để lạ
         # Quay lại trang Admin mà lễ tân vừa đứng (Bảng phòng hoặc Bảng Booking)
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/admin/'))
     @admin.action(description='✅ Check-in (Nhận phòng) cho các đơn đã chọn')
+    
+    # Check-in hàng loạt
     def check_in_booking(self, request, queryset):
         valid_bookings = queryset.filter(status='CONFIRMED', is_active=True, cancellation_requested=False)
         count = valid_bookings.count()
@@ -392,6 +406,8 @@ Hy vọng bạn đã có trải nghiệm tuyệt vời. Xin vui lòng để lạ
         self.message_user(request, msg, level=admin_messages.SUCCESS)
 
     @admin.action(description='🚪 Check-out (Trả phòng) cho các đơn đã chọn')
+    
+    # Check-out hàng loạt
     def check_out_booking(self, request, queryset):
         valid_bookings = queryset.filter(status='CHECKED_IN', is_active=True)
         count = valid_bookings.count()
@@ -435,6 +451,7 @@ class MessageInline(TabularInline):
     readonly_fields = ('sender', 'content', 'created_at', 'is_read')
     can_delete = False
 
+    # Chặn quyền thêm tin nhắn mới trực tiếp từ giao diện( bắt buộc dùng giao diện chat)
     def has_add_permission(self, request, obj=None):
         return False
 
@@ -447,9 +464,11 @@ class ConversationAdmin(ModelAdmin):
     readonly_fields = ('customer', 'booking', 'subject', 'created_at', 'updated_at')
     fields = ('subject', 'customer', 'booking', 'is_closed', 'created_at', 'updated_at')
 
+    # Chặn quyền admin tự tạo hội thoại mới
     def has_add_permission(self, request):
         return False
 
+    # Thêm đường dẫn cho trang chat
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
@@ -461,6 +480,7 @@ class ConversationAdmin(ModelAdmin):
         ]
         return custom_urls + urls
 
+    # Logic giao diện chat
     def process_reply(self, request, conversation_id):
         conversation = get_object_or_404(
             Conversation.objects.select_related('customer', 'booking', 'booking__room'),
@@ -505,6 +525,7 @@ class ConversationAdmin(ModelAdmin):
         }
         return render(request, 'admin/conversation_chat.html', context)
 
+    # Hàm tạo nút trả lời tin nhắn nhanh
     def thao_tac_nhanh(self, obj):
         url = reverse('admin:conversation-reply', args=[obj.pk])
         unread = obj.messages.filter(is_read=False, sender__is_staff=False).count()
@@ -516,6 +537,7 @@ class ConversationAdmin(ModelAdmin):
         )
     thao_tac_nhanh.short_description = 'Thao tác'
 
+    # Đếm số lượng tin nhắn mới từ khách hàng
     def unread_from_customer(self, obj):
         count = obj.messages.filter(is_read=False, sender__is_staff=False).count()
         if count:
@@ -531,12 +553,15 @@ class MessageAdmin(ModelAdmin):
     search_fields = ('content', 'sender__username', 'conversation__subject')
     readonly_fields = ('conversation', 'sender', 'content', 'created_at', 'is_read')
 
+    # Chặn quyền tạo tin nhắn mới lẻ tẻ từ trang quản lý
     def has_add_permission(self, request):
         return False
 
+    # Chặn chỉnh sửa nội dung tn
     def has_change_permission(self, request, obj=None):
         return False
 
+    # Cắt ngắn nội dung tin nhắn để hiển thị gọn
     def content_preview(self, obj):
         return obj.content[:80] + ('...' if len(obj.content) > 80 else '')
     content_preview.short_description = 'Nội dung'
