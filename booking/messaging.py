@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from .models import Conversation, Message
 
+# Lấy danh sách cuộc hội thoại của khách hàng, đếm kèm số tin nhắn chưa đọc từ nhân viên[cite: 2].
 def get_customer_conversations(user):
     return Conversation.objects.filter(customer=user).select_related(
         'booking', 'booking__room'
@@ -15,6 +16,7 @@ def get_customer_conversations(user):
     )
 
 
+# Lấy toàn bộ danh sách hội thoại cho nhân viên, đếm kèm số tin nhắn chưa đọc từ khách
 def get_staff_conversations():
     return Conversation.objects.select_related(
         'customer', 'booking', 'booking__room'
@@ -26,6 +28,7 @@ def get_staff_conversations():
     )
 
 
+# Đánh dấu tất cả các tin nhắn của người khác gửi trong cuộc hội thoại thành trạng thái đã đọc
 def mark_messages_read(conversation, reader):
     Message.objects.filter(
         conversation=conversation,
@@ -33,6 +36,7 @@ def mark_messages_read(conversation, reader):
     ).exclude(sender=reader).update(is_read=True)
 
 
+# Đếm tổng số lượng tin nhắn chưa đọc dựa trên vai trò người dùng là khách hay nhân viên
 def get_unread_count(user):
     if not user.is_authenticated:
         return 0
@@ -45,10 +49,12 @@ def get_unread_count(user):
     ).count()
 
 
+# Lấy tài khoản nhân viên (staff) đang hoạt động đầu tiên trong hệ thống để làm người gửi tự động
 def _get_system_staff():
     return User.objects.filter(is_staff=True, is_active=True).order_by('pk').first()
 
 
+# Tự động gửi tin nhắn hệ thống xác nhận đặt phòng và báo cáo tài chính cho khách sau khi cọc thành công
 def notify_booking_confirmed(booking):
     """Gửi tin nhắn xác nhận đặt phòng cho khách sau khi thanh toán cọc thành công."""
     staff = _get_system_staff()

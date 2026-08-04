@@ -33,6 +33,8 @@ from .models import (
 )
 from .vnpay import vnpay
 
+
+# Lấy danh sách ID các phòng mà người dùng hiện tại đã thả tim (yêu thích)
 def _get_favorite_room_ids(user):
     if not user.is_authenticated:
         return set()
@@ -42,7 +44,7 @@ def _get_favorite_room_ids(user):
  
 # GIAO DIỆN PHÒNG & ĐẶT PHÒNG
  
-
+# Hiển thị danh sách phòng, tích hợp chức năng tìm kiếm và bộ lọc nhiều tiêu chí
 def room_list(request):
     """Hiển thị danh sách phòng, hỗ trợ tìm kiếm full text và bộ lọc"""
     auto_cancel_overdue_bookings()
@@ -112,6 +114,8 @@ def room_list(request):
         'favorite_room_ids': _get_favorite_room_ids(request.user),
     })
 
+
+# Hiển thị trang thông tin chi tiết của một phòng cụ thể
 def room_detail(request, room_id):
     """Hiển thị chi tiết một phòng cụ thể"""
     room = get_object_or_404(Room, id=room_id)
@@ -120,7 +124,7 @@ def room_detail(request, room_id):
         'is_favorite': room.id in _get_favorite_room_ids(request.user),
     })
 
-
+# Xử lý logic đặt phòng, tính toán giá động (theo mùa, mã giảm) và tạo đơn
 @login_required(login_url='login')
 def book_room(request, room_id):
     """Xử lý logic đặt phòng (Bắt buộc đăng nhập)"""
@@ -232,7 +236,7 @@ def book_room(request, room_id):
  
 # QUẢN LÝ TÀI KHOẢN & LỊCH SỬ ĐẶT PHÒNG
  
-
+# Hiển thị trang hồ sơ cá nhân và quản lý lịch sử đặt phòng của khách
 @login_required(login_url='login') 
 def user_profile(request):
     """Trang cá nhân và lịch sử đặt phòng của khách"""
@@ -261,6 +265,8 @@ def user_profile(request):
         'bookings': bookings
     })
 
+
+# Hiển thị danh sách các phòng mà khách hàng đã lưu vào mục yêu thích
 @login_required(login_url='login')
 def favorite_list(request):
     favorites = Favorite.objects.filter(user=request.user).select_related(
@@ -271,6 +277,7 @@ def favorite_list(request):
     })
 
 
+# Xử lý thao tác bật/tắt (thêm hoặc xóa) một phòng khỏi danh sách yêu thích
 @login_required(login_url='login')
 @require_POST
 def toggle_favorite(request, room_id):
@@ -290,7 +297,7 @@ def toggle_favorite(request, room_id):
         next_url = reverse('room_detail', args=[room.id])
     return redirect(next_url)
 
-
+# Xử lý yêu cầu hủy phòng, kiểm tra điều kiện hoàn hủy và gửi email bảo lưu
 @login_required
 def cancel_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id, user=request.user)
@@ -348,7 +355,7 @@ Trân trọng."""
  
 # XÁC THỰC NGƯỜI DÙNG (AUTH)
  
-
+# Xác thực thông tin và xử lý đăng nhập tài khoản người dùng
 def login_user(request):
     if request.user.is_authenticated:
         return redirect('room_list')
@@ -371,11 +378,13 @@ def login_user(request):
 
     return render(request, 'booking/login.html')
 
+# Xử lý đăng xuất tài khoản và chuyển hướng về trang chủ
 def logout_user(request):
     logout(request)
     messages.success(request, "Bạn đã đăng xuất thành công.")
     return redirect('room_list')
 
+# Kiểm tra dữ liệu đăng ký, tạo tài khoản mới và tự động đăng nhập
 def register_user(request):
     if request.user.is_authenticated:
         return redirect('room_list')
@@ -415,7 +424,7 @@ def register_user(request):
  
 # THANH TOÁN VNPAY
  
-
+# Tạo URL thanh toán VNPay và chuyển hướng khách sang cổng thanh toán
 @login_required(login_url='login')
 def create_payment(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id, user=request.user)
@@ -450,7 +459,7 @@ def create_payment(request, booking_id):
     vnpay_payment_url = vnp.get_payment_url(settings.VNPAY_PAYMENT_URL, settings.VNPAY_HASH_SECRET_KEY)
     return redirect(vnpay_payment_url)
 
-
+# Xử lý kết quả trả về từ VNPay, lưu lịch sử, cập nhật đơn hàng và gửi email
 @login_required(login_url='login')
 def payment_return(request):
     inputData = request.GET
@@ -516,7 +525,7 @@ Cảm ơn bạn đã chọn hệ thống của chúng tôi!"""
             
     return redirect('user_profile')
 
-
+# Quét và tự động hủy các đơn đặt phòng đang chờ thanh toán nhưng đã quá hạn
 def auto_cancel_overdue_bookings():
     pending_bookings = Booking.objects.filter(status='PENDING', is_active=True)
     now = timezone.now()
@@ -543,12 +552,13 @@ def auto_cancel_overdue_bookings():
  
 # TRUNG TÂM TIN NHẮN (KHÁCH HÀNG)
  
-
+# Kiểm tra xem user hiện tại có quyền xem cuộc hội thoại hỗ trợ này không
 def _can_access_conversation(user, conversation):
     if user.is_staff:
         return False
     return conversation.customer_id == user.id
 
+# Chuyển đổi object Tin Nhắn thành định dạng JSON để trả về cho API frontend
 def _serialize_message(msg):
     return {
         'id': msg.id,
@@ -560,6 +570,7 @@ def _serialize_message(msg):
         'time_short': msg.created_at.strftime('%H:%M'),
     }
 
+# Hiển thị giao diện danh sách hộp thư hỗ trợ khách hàng
 @login_required(login_url='login')
 def message_inbox(request):
     if request.user.is_staff:
@@ -572,6 +583,7 @@ def message_inbox(request):
         'is_staff_view': False,
     })
 
+# Hiển thị chi tiết luồng tin nhắn, xử lý gửi tin mới và đánh dấu đã đọc
 @login_required(login_url='login')
 def message_thread(request, conversation_id):
     if request.user.is_staff:
@@ -624,6 +636,7 @@ def message_thread(request, conversation_id):
         'is_staff_view': False,
     })
 
+# Tạo một yêu cầu hỗ trợ (ticket/hội thoại) mới từ phía khách hàng
 @login_required(login_url='login')
 def new_conversation(request):
     if request.user.is_staff:
@@ -665,6 +678,8 @@ def new_conversation(request):
         'default_subject': default_subject,
     })
 
+
+# API Polling để frontend lấy dữ liệu tin nhắn mới liên tục (realtime)
 @login_required(login_url='login')
 @require_GET
 def message_poll(request, conversation_id):
@@ -688,7 +703,7 @@ def message_poll(request, conversation_id):
     return JsonResponse({'messages': result})
 
 
-
+# API Ajax tính toán lại tổng tiền và trả về thông báo giá, khuyến mãi
 @require_POST
 def calculate_price_api(request):
     try:
@@ -791,14 +806,14 @@ def calculate_price_api(request):
  
 # MODULE THỐNG KÊ DOANH THU & HIỆU SUẤT (ENTERPRISE DASHBOARD)
  
-
+# Tính toán tỷ lệ phần trăm tăng trưởng giữa kỳ hiện tại và kỳ trước
 def calculate_growth(current: float, previous: float) -> float:
     """Hàm phụ trợ tính phần trăm tăng/giảm so với kỳ trước."""
     if previous == 0:
         return 100.0 if current > 0 else 0.0
     return round(((current - previous) / previous) * 100, 2)
 
-
+# Tính toán và xuất dữ liệu báo cáo kinh doanh chuyên sâu cho Admin Dashboard
 @user_passes_test(lambda u: u.is_staff, login_url='login')
 def hotel_dashboard_reports(request):
     """
@@ -987,7 +1002,7 @@ def hotel_dashboard_reports(request):
 
 import calendar
 
-
+# Tạo dữ liệu dạng lưới ma trận để hiển thị sơ đồ timeline phòng (Gantt Chart)
 @login_required(login_url='login')
 def admin_room_map_view(request) -> HttpResponse:
     """

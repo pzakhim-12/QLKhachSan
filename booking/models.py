@@ -9,6 +9,7 @@ class RoomCategory(models.Model):
     name = models.CharField(max_length=50) 
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2)
     capacity = models.IntegerField(default=2)
+    # Kiểm tra lịch thời gian và trả về thông báo phụ thu/ưu đãi giá phòng theo mùa vụ hiện tại
     def get_current_season_alert(self):
         
         
@@ -46,7 +47,8 @@ class RoomCategory(models.Model):
     class Meta:
         verbose_name = "Loại phòng"
         verbose_name_plural = "Các loại phòng"
-    
+
+    # Trả về tên loại phòng để hiển thị đại diện cho object RoomCategory
     def __str__(self):
         return self.name
 
@@ -74,6 +76,7 @@ class Room(models.Model):
         verbose_name = "Phòng"
         verbose_name_plural = "Danh sách phòng"
 
+    # Trả về chuỗi định dạng gồm chữ "Phòng" kèm số phòng để hiển thị đại diện cho object Room
     def __str__(self) -> str:
         return f"Phòng {self.room_number}"
 
@@ -125,6 +128,7 @@ class Booking(models.Model):
         verbose_name_plural = "Các đơn đặt phòng"
 
 
+    # Trả về tóm tắt thông tin người đặt, số phòng và trạng thái để hiển thị đại diện cho object Booking
     def __str__(self):
         return f"{self.user.username} đặt {self.room.room_number} ({self.get_status_display()})"
 
@@ -142,6 +146,7 @@ class Payment(models.Model):
         verbose_name = "Thanh toán VNPay"
         verbose_name_plural = "Lịch sử thanh toán"
 
+    # Trả về chuỗi hiển thị mã giao dịch VNPay và số phòng tương ứng cho object Payment
     def __str__(self):
         return f"GD {self.vnp_txn_ref} - {self.booking.room.room_number}"
 
@@ -151,7 +156,8 @@ class RoomImage(models.Model):
     # Khóa ngoại liên kết với bảng Room
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='rooms/gallery/')
-    
+
+    # Trả về chuỗi mô tả thông tin hình ảnh đang thuộc về phòng nào cho object RoomImage
     def __str__(self):
         return f"Ảnh chi tiết của phòng {self.room.room_number}"
     
@@ -161,6 +167,7 @@ class UserProfile(models.Model):
     phone_number = models.CharField(max_length=15, blank=True, null=True, default="Chưa cập nhật")
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
 
+    # Trả về chuỗi định dạng tên tài khoản để hiển thị đại diện cho object UserProfile
     def __str__(self):
         return f"Hồ sơ của {self.user.username}"
 
@@ -176,6 +183,7 @@ class Favorite(models.Model):
         unique_together = ('user', 'room')
         ordering = ['-created_at']
 
+    # Trả về chuỗi thông báo khách hàng nào đã nhấn yêu thích phòng nào cho object Favorite
     def __str__(self):
         return f"{self.user.username} thích phòng {self.room.room_number}"
 
@@ -199,9 +207,11 @@ class Conversation(models.Model):
         verbose_name_plural = "Cuộc hội thoại"
         ordering = ['-updated_at']
 
+    # Trả về chuỗi hiển thị tiêu đề cuộc hội thoại và tên khách hàng cho object Conversation
     def __str__(self):
         return f"{self.subject} — {self.customer.username}"
 
+    # Thuộc tính (property) lấy ra tin nhắn mới nhất được gửi trong cuộc hội thoại này
     @property
     def last_message(self):
         return self.messages.order_by('-created_at').first()
@@ -225,6 +235,7 @@ class Message(models.Model):
         verbose_name_plural = "Tin nhắn"
         ordering = ['created_at']
 
+    # Trả về tên người gửi và trích xuất tối đa 50 ký tự đầu của nội dung tin nhắn
     def __str__(self):
         preview = self.content[:50] + ('...' if len(self.content) > 50 else '')
         return f"{self.sender.username}: {preview}"
@@ -243,6 +254,7 @@ class RatePlan(models.Model):
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.0, help_text="Giảm giá % so với giá gốc")
     is_active = models.BooleanField(default=True)
 
+    # Trả về chuỗi hiển thị tên gói giá kèm theo mức phần trăm giảm giá cho object RatePlan
     def __str__(self):
         return f"{self.name} (-{self.discount_percentage}%)"
 
@@ -253,7 +265,9 @@ class SeasonalPricing(models.Model):
     # Thay đổi: Chuyển thành nhập Phần trăm
     percent_adjustment = models.DecimalField(max_digits=5, decimal_places=2, default=0.0, verbose_name="Mức điều chỉnh (%)", help_text="Nhập số dương để Tăng giá (VD: 50 là tăng 50%). Nhập số âm để Giảm giá (VD: -20 là giảm 20%)")
     is_weekend_only = models.BooleanField(default=False, verbose_name="Chỉ tăng/giảm cuối tuần (T6, T7, CN)")
-    
+
+
+    # Trả về chuỗi hiển thị tên sự kiện mùa vụ kèm theo mức điều chỉnh giá (+ hoặc - %)
     def __str__(self):
         sign = "+" if self.percent_adjustment > 0 else ""
         return f"{self.name} ({sign}{self.percent_adjustment}%)"
@@ -270,10 +284,12 @@ class Coupon(models.Model):
     used_count = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
+    # Kiểm tra mã khuyến mãi có đang được bật (active), trong thời hạn và còn lượt sử dụng không
     def is_valid(self):
         
         return self.is_active and self.valid_from <= timezone.now() <= self.valid_to and self.used_count < self.usage_limit
 
+    # Trả về chuỗi text của mã khuyến mãi (code) để hiển thị đại diện cho object Coupon
     def __str__(self):
         return self.code
 # Hàm này giúp tự động tạo Profile rỗng (số dư = 0) mỗi khi có một tài khoản User mới được tạo
