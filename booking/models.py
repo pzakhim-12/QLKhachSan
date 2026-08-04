@@ -292,7 +292,7 @@ class Coupon(models.Model):
     # Trả về chuỗi text của mã khuyến mãi (code) để hiển thị đại diện cho object Coupon
     def __str__(self):
         return self.code
-# Hàm này giúp tự động tạo Profile rỗng (số dư = 0) mỗi khi có một tài khoản User mới được tạo
+# Hàm này giúp tự động tạo Profile rỗng (số dư = 0) mỗi khi có một tài khoản User mới được tạoo
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
