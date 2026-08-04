@@ -553,7 +553,7 @@ class MessageAdmin(ModelAdmin):
     search_fields = ('content', 'sender__username', 'conversation__subject')
     readonly_fields = ('conversation', 'sender', 'content', 'created_at', 'is_read')
 
-    # Chặn quyền tạo tin nhắn mới lẻ tẻ từ trang quản lý
+    # Chặn quyền tạo tin nhắn mới lẻ tẻ từ trang quản lý.
     def has_add_permission(self, request):
         return False
 
@@ -565,4 +565,3 @@ class MessageAdmin(ModelAdmin):
     def content_preview(self, obj):
         return obj.content[:80] + ('...' if len(obj.content) > 80 else '')
     content_preview.short_description = 'Nội dung'
-
