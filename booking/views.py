@@ -862,11 +862,11 @@ def hotel_dashboard_reports(request):
     total_capacity_nights = total_active_rooms * days
     current_revenue = float(current_stats['total_revenue'])
     
-    # ADR (Average Daily Rate) 
+    # ADR (Average Daily Rate - Giá bán bình quân/đêm) 
     adr = round(current_revenue / current_booked_nights, 0) if current_booked_nights > 0 else 0
-    # RevPAR (Revenue Per Available Room)
+    # RevPAR (Revenue Per Available Room - Doanh thu trên số phòng sẵn có)
     revpar = round(current_revenue / total_capacity_nights, 0) if total_capacity_nights > 0 else 0
-    # ALOS (Average Length of Stay)
+    # ALOS (Average Length of Stay - Thời gian lưu trú trung bình)
     successful_orders = current_stats['total_orders'] - current_stats['cancelled_orders'] - current_stats['noshow_orders']
     alos = round(current_booked_nights / successful_orders, 1) if successful_orders > 0 else 0
 
@@ -926,6 +926,8 @@ def hotel_dashboard_reports(request):
         booking_count=Count('id')
     ).order_by('-total_revenue')[:5]
 
+
+    # 1. TÍNH CÔNG NỢ CHO TỪNG ĐƠN ĐẶT PHÒNG
     debt_bookings = Booking.objects.filter(
         status__in=['CONFIRMED', 'CHECKED_IN'],
         is_active=True
@@ -936,6 +938,8 @@ def hotel_dashboard_reports(request):
         )
     ).filter(remaining_balance__gt=0).order_by('check_in')
 
+
+    # 2. TÍNH TỔNG TẤT CẢ CÔNG NỢ CỦA KHÁCH SẠN
     total_outstanding_debt = debt_bookings.aggregate(
         total_debt=Coalesce(Sum('remaining_balance'), 0.00, output_field=DecimalField())
     )['total_debt']
